@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/icons/deepin/builtin">
+        <file>light/icons/am_filter_64px.svg</file>
+        <file>dark/icons/am_filter_64px.svg</file>
+    </qresource>
+</RCC>
