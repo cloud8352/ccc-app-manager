@@ -222,7 +222,7 @@ AppManagerWidget::AppManagerWidget(QWidget *parent)
     firstLineBottomLayout->addWidget(uninstallBtn);
 
     firstLineBottomLayout->addSpacing(10);
-    QPushButton *gotoAppStoreBtn = new QPushButton("在应用商店中查看", this);
+    QPushButton *gotoAppStoreBtn = new QPushButton("在深度应用商店中查看", this);
     gotoAppStoreBtn->setMaximumWidth(170);
     firstLineBottomLayout->addWidget(gotoAppStoreBtn);
 
@@ -235,6 +235,12 @@ AppManagerWidget::AppManagerWidget(QWidget *parent)
     QPushButton *getPkgFromLocalBtn = new QPushButton("离线获取安装包", this);
     getPkgFromLocalBtn->setMaximumWidth(170);
     firstLineBottomLayout->addWidget(getPkgFromLocalBtn);
+    firstLineBottomLayout->addSpacing(10);
+
+    firstLineBottomLayout->addSpacing(10);
+    QPushButton *gotoSpkAppStoreBtn = new QPushButton("在星火应用商店中查看", this);
+    gotoSpkAppStoreBtn->setMaximumWidth(170);
+    firstLineBottomLayout->addWidget(gotoSpkAppStoreBtn);
     firstLineBottomLayout->addSpacing(10);
 
     // 左置顶
@@ -302,9 +308,13 @@ AppManagerWidget::AppManagerWidget(QWidget *parent)
         this->m_model->notifyThreadUninstallPkg(m_showingAppInfo.pkgName);
     });
 
-    // 跳转到商店
+    // 跳转到深度商店
     connect(gotoAppStoreBtn, &QPushButton::clicked, this, [this](bool) {
         this->m_model->openStoreAppDetailPage(m_showingAppInfo.pkgName);
+    });
+    //跳转到星火商店
+    connect(gotoSpkAppStoreBtn, &QPushButton::clicked, this, [this](bool) {
+        this->m_model->openSpkStoreAppDetailPage(m_showingAppInfo.pkgName);
     });
 
     // 在线获取安装包
@@ -358,8 +368,8 @@ AppManagerWidget::AppManagerWidget(QWidget *parent)
     // model信号连接
     connect(m_model, &AppManagerModel::loadAppInfosFinished, this, [this] {
         m_appInfoList = m_model->getAppInfosList();
-        // 显示所有应用
-        Q_EMIT m_filterMenu->triggered(m_showAllAppAction);
+        // 默认显示界面应用
+        Q_EMIT m_filterMenu->triggered(m_showGuiAppAction);
         this->setLoading(false);
     });
 

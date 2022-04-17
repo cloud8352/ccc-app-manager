@@ -1,6 +1,6 @@
 #include "appmanagermodel.h"
 #include "appmanagerjob.h"
-
+#include <qurl.h>
 #include <QThread>
 #include <QDebug>
 #include <QProcess>
@@ -100,6 +100,16 @@ void AppManagerModel::openStoreAppDetailPage(const QString &pkgName)
     proc.start(cmd);
     proc.waitForStarted();
     proc.waitForFinished();
+}
+
+void AppManagerModel::openSpkStoreAppDetailPage(const QString &pkgName)
+{
+    QProcess spkopen;
+    QString cmd = QString("notify-send shenmo \"\因为无法获取分类信息，暂时没有实现这个功能\"\ ");
+    spkopen.start(cmd);
+    spkopen.waitForStarted();
+    spkopen.waitForFinished();
+
 }
 
 QString AppManagerModel::getDownloadDirPath() const

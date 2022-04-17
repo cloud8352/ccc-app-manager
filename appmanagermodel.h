@@ -30,6 +30,7 @@ public:
     QList<AM::AppInfo> getShowingAppInfoList() const;
 
     void openStoreAppDetailPage(const QString &pkgName);
+    void openSpkStoreAppDetailPage(const QString &pkgName);
     QString getDownloadDirPath() const;
     QString getPkgBuildDirPath() const;
 
