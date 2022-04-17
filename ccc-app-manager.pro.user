@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 4.82.0, 2022-04-17T18:55:42. -->
+<!-- Written by QtCreator 4.82.0, 2022-04-17T18:56:11. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -249,7 +249,6 @@
     <value type="bool" key="RunConfiguration.UseLibrarySearchPath">true</value>
     <value type="bool" key="RunConfiguration.UseQmlDebugger">false</value>
     <value type="bool" key="RunConfiguration.UseQmlDebuggerAuto">true</value>
-    <value type="QString" key="RunConfiguration.WorkingDirectory.default">/home/shenmo/Desktop/build-ccc-app-manager-unknown-Profile</value>
    </valuemap>
    <value type="int" key="ProjectExplorer.Target.RunConfigurationCount">1</value>
   </valuemap>
