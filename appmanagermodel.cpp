@@ -4,6 +4,7 @@
 #include <QThread>
 #include <QDebug>
 #include <QProcess>
+#include <QStringList>
 
 using namespace AM;
 
@@ -162,6 +163,11 @@ void AppManagerModel::initConnection()
 
     connect(this, &AppManagerModel::notifyThreadUninstallPkg, m_appManagerJob, &AppManagerJob::uninstallPkg);
     connect(m_appManagerJob, &AppManagerJob::uninstallPkgFinished, this, [this](const QString &pkgName) {
+        QProcess uninstnotify;
+            QString cmd = QString("notify-send ccc-app-manager \"\软件包 ")+pkgName+QString(" 已卸载\"\ ");
+            uninstnotify.start(cmd);
+            uninstnotify.waitForStarted();
+            uninstnotify.waitForFinished();
         qInfo() << pkgName << "uninstalled";
     });
 
