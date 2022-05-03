@@ -169,7 +169,6 @@ void AppManagerJob::reloadAppInfos()
 
     reloadSourceUrlList();
 
-    m_appInfosMap.clear();
     QDir aptPkgInfoListDir("/var/lib/apt/lists");
     const QStringList fileNameList = aptPkgInfoListDir.entryList(QDir::Filter::Files | QDir::Filter::NoDot | QDir::Filter::NoDotDot);
     for (const QString &fileName : fileNameList) {
@@ -459,64 +458,31 @@ bool AppManagerJob::getPkgInfoListFromFile(QList<PkgInfo> &pkgInfoList, const QS
     }
 
     PkgInfo pkgInfo;
-    bool isReadingDescription = false;
     QTextStream txtStrem(&pkgInfosFile);
-    while (!txtStrem.atEnd()) {
-        QString lineTxt = txtStrem.readLine();
-        if (lineTxt.startsWith("Package: ")) {
-            pkgInfo.pkgName = lineTxt.split(": ").last();
-            continue;
-        }
-        if (lineTxt.startsWith("Installed-Size: ")) {
-            pkgInfo.installedSize = lineTxt.split(": ").last().toInt();
-            continue;
-        }
-        if (lineTxt.startsWith("Maintainer: ")) {
-            pkgInfo.maintainer = lineTxt.split(": ").last();
-            continue;
-        }
-        if (lineTxt.startsWith("Architecture: ")) {
-            pkgInfo.arch = lineTxt.split(": ").last();
-            continue;
-        }
-        if (lineTxt.startsWith("Version: ")) {
-            pkgInfo.version = lineTxt.split(": ").last();
-            continue;
-        }
-        if (lineTxt.startsWith("Depends: ")) {
-            pkgInfo.depends = lineTxt.split(": ").last();
-            continue;
-        }
-        if (lineTxt.startsWith("Filename: ")) {
-            const QString downloadFileName = lineTxt.split(": ").last();
-            pkgInfo.downloadUrl = QString("%1/%2").arg(depositoryUrlStr).arg(downloadFileName);
-            continue;
-        }
-        if (lineTxt.startsWith("Size: ")) {
-            pkgInfo.pkgSize = lineTxt.split(": ").last().toInt();
-            continue;
+    bool isReadingFirstApp = true;
+    qint64 contentOffset = 0;
+    while (!pkgInfosFile.atEnd()) {
+        if (!isReadingFirstApp && 0 == pkgInfo.contentOffset) {
+            pkgInfo.contentOffset = contentOffset;
         }
 
-        if (lineTxt.startsWith("Description: ")) {
-            pkgInfo.description = lineTxt.split(": ").last();
-            pkgInfo.description.append("\n");
-            isReadingDescription = true;
-            continue;
-        }
-        if (lineTxt.startsWith("Homepage: ")) {
-            pkgInfo.homepage = lineTxt.split(": ").last();
-            continue;
-        }
+        const QByteArray ba = pkgInfosFile.readLine();
+        contentOffset += ba.size();
 
-        if (lineTxt.startsWith(" ") && isReadingDescription) {
-            pkgInfo.description += lineTxt;
+        QString lineText = QString::fromUtf8(ba).remove("\n");
+        if (lineText.startsWith("Package: ")) {
+            pkgInfo.pkgName = lineText.split(": ").last();
             continue;
         }
 
         // 检测到下一包信息
-        if (lineTxt.isEmpty()) {
+        if (lineText.isEmpty()) {
+            pkgInfo.infosFilePath = pkgInfosFilePath;
+            pkgInfo.depositoryUrl = depositoryUrlStr;
+            pkgInfo.contentSize = contentOffset - pkgInfo.contentOffset;
             pkgInfoList.append(pkgInfo);
-            isReadingDescription = false;
+            pkgInfo = {};
+            isReadingFirstApp = false;
         }
     }
     pkgInfosFile.close();
@@ -530,7 +496,7 @@ void AppManagerJob::loadSrvAppInfosFromFile(QMap<QString, AppInfo> &appInfosMap,
 {
     QList<PkgInfo> pkgInfoList;
     getPkgInfoListFromFile(pkgInfoList, pkgInfosFilePath);
-    qInfo() << Q_FUNC_INFO << pkgInfoList.size();
+    qInfo() << Q_FUNC_INFO << pkgInfosFilePath << pkgInfoList.size();
 
     for (const PkgInfo &pkgInfo : pkgInfoList) {
         m_mutex.lock(); // appInfosMap为成员变量，加锁
@@ -552,14 +518,6 @@ void AppManagerJob::loadInstalledAppInfosFromFile(QMap<QString, AppInfo> &appInf
         appInfo->pkgName = pkgInfo.pkgName;
         appInfo->isInstalled = true;
         appInfo->installedPkgInfo = pkgInfo;
-        // 根据版本找到候选包中对应的包大小和下载地址
-        for (const PkgInfo &srvPkgInfo : appInfo->pkgInfoList) {
-            if (appInfo->installedPkgInfo.version == srvPkgInfo.version) {
-                appInfo->installedPkgInfo.pkgSize = srvPkgInfo.pkgSize;
-                appInfo->installedPkgInfo.downloadUrl = srvPkgInfo.downloadUrl;
-                break;
-            }
-        }
 
         // 获取安装文件路径列表
         appInfo->installedPkgInfo.installedFileList = getAppInstalledFileList(appInfo->installedPkgInfo.pkgName);
@@ -567,6 +525,7 @@ void AppManagerJob::loadInstalledAppInfosFromFile(QMap<QString, AppInfo> &appInf
         appInfo->desktopInfo.desktopPath = getAppDesktopPath(appInfo->installedPkgInfo.installedFileList,
                                                              appInfo->installedPkgInfo.pkgName);
         appInfo->desktopInfo = getDesktopInfo(appInfo->desktopInfo.desktopPath);
+
         m_mutex.unlock(); // 解锁
     }
 }
@@ -577,7 +536,7 @@ QStringList AppManagerJob::getAppInstalledFileList(const QString &pkgName)
 
     QFile installedListFile(QString("/var/lib/dpkg/info/%1.list").arg(pkgName));
     if (!installedListFile.open(QIODevice::OpenModeFlag::ReadOnly)) {
-        qDebug() << Q_FUNC_INFO << "open" << installedListFile.fileName() << "failed!";
+        qInfo() << Q_FUNC_INFO << "open" << installedListFile.fileName() << "failed!";
         return fileList;
     }
 
@@ -586,7 +545,6 @@ QStringList AppManagerJob::getAppInstalledFileList(const QString &pkgName)
         fileList.append(txtStrem.readLine());
     }
     installedListFile.close();
-    sync();
 
     return fileList;
 }

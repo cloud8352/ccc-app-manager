@@ -33,6 +33,8 @@ public:
     void openSpkStoreAppDetailPage(const QString &pkgName);
     QString getDownloadDirPath() const;
     QString getPkgBuildDirPath() const;
+    // 拓展包信息
+    bool extendPkgInfo(AM::PkgInfo &pkgInfo);
 
 Q_SIGNALS:
     void notifyThreadreloadAppInfos();

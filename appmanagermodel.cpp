@@ -5,6 +5,7 @@
 #include <QDebug>
 #include <QProcess>
 #include <QStringList>
+#include <QFile>
 
 using namespace AM;
 
@@ -123,6 +124,78 @@ QString AppManagerModel::getPkgBuildDirPath() const
     return m_appManagerJob->getPkgBuildDirPath();
 }
 
+bool AppManagerModel::extendPkgInfo(PkgInfo &pkgInfo)
+{
+    QFile pkgInfosFile(pkgInfo.infosFilePath);
+
+    if (!pkgInfosFile.open(QIODevice::OpenModeFlag::ReadOnly)) {
+        qInfo() << Q_FUNC_INFO << "open" << pkgInfosFile.fileName() << "failed!";
+        return false;
+    }
+
+    pkgInfosFile.seek(pkgInfo.contentOffset);
+    QString content = pkgInfosFile.read(pkgInfo.contentSize);
+    pkgInfosFile.close();
+
+    QStringList infoLineList = content.split("\n");
+    bool isReadingDescription = false;
+    for (const QString &infoLine : infoLineList) {
+        if (infoLine.startsWith("Package: ")) {
+            pkgInfo.pkgName = infoLine.split(": ").last();
+            continue;
+        }
+
+        if (infoLine.startsWith("Installed-Size: ")) {
+            pkgInfo.installedSize = infoLine.split(": ").last().toInt();
+            continue;
+        }
+        if (infoLine.startsWith("Maintainer: ")) {
+            pkgInfo.maintainer = infoLine.split(": ").last();
+            continue;
+        }
+        if (infoLine.startsWith("Architecture: ")) {
+            pkgInfo.arch = infoLine.split(": ").last();
+            continue;
+        }
+        if (infoLine.startsWith("Version: ")) {
+            pkgInfo.version = infoLine.split(": ").last();
+            continue;
+        }
+        if (infoLine.startsWith("Depends: ")) {
+            pkgInfo.depends = infoLine.split(": ").last();
+            continue;
+        }
+        if (infoLine.startsWith("Filename: ")) {
+            const QString downloadFileName = infoLine.split(": ").last();
+            pkgInfo.downloadUrl = QString("%1/%2").arg(pkgInfo.depositoryUrl).arg(downloadFileName);
+            continue;
+        }
+        if (infoLine.startsWith("Size: ")) {
+            pkgInfo.pkgSize = infoLine.split(": ").last().toInt();
+            continue;
+        }
+
+        if (infoLine.startsWith("Homepage: ")) {
+            pkgInfo.homepage = infoLine.split(": ").last();
+            continue;
+        }
+
+
+        if (infoLine.startsWith("Description: ")) {
+            pkgInfo.description = infoLine.split(": ").last();
+            pkgInfo.description.append("\n");
+            isReadingDescription = true;
+            continue;
+        }
+        if (infoLine.startsWith(" ") && isReadingDescription) {
+            pkgInfo.description += infoLine;
+            continue;
+        }
+    }
+
+    return true;
+}
+
 void AppManagerModel::initData()
 {
     // 注册结构体
@@ -162,12 +235,12 @@ void AppManagerModel::initConnection()
     });
 
     connect(this, &AppManagerModel::notifyThreadUninstallPkg, m_appManagerJob, &AppManagerJob::uninstallPkg);
-    connect(m_appManagerJob, &AppManagerJob::uninstallPkgFinished, this, [this](const QString &pkgName) {
+    connect(m_appManagerJob, &AppManagerJob::uninstallPkgFinished, this, [](const QString &pkgName) {
         QProcess uninstnotify;
-            QString cmd = QString("notify-send ccc-app-manager \"\软件包 ")+pkgName+QString(" 已卸载\"\ ");
-            uninstnotify.start(cmd);
-            uninstnotify.waitForStarted();
-            uninstnotify.waitForFinished();
+        QString cmd = QString("notify-send ccc-app-manager \" 软件包 ")+ pkgName + QString(" 已卸载\" ");
+        uninstnotify.start(cmd);
+        uninstnotify.waitForStarted();
+        uninstnotify.waitForFinished();
         qInfo() << pkgName << "uninstalled";
     });
 

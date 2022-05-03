@@ -386,6 +386,28 @@ AppManagerWidget::~AppManagerWidget()
 void AppManagerWidget::showAppInfo(const AppInfo &info)
 {
     m_showingAppInfo = info;
+
+    // 拓展已安装应用信息
+    if (m_showingAppInfo.isInstalled) {
+        if (!m_model->extendPkgInfo(m_showingAppInfo.installedPkgInfo)) {
+            return;
+        }
+    }
+
+    // 拓展仓库应用信息
+    for (PkgInfo &srvPkgInfo : m_showingAppInfo.pkgInfoList) {
+        if (!m_model->extendPkgInfo(srvPkgInfo)) {
+            continue;
+        }
+
+        // 根据版本找到候选包中对应的包大小和下载地址
+        if (m_showingAppInfo.installedPkgInfo.version == srvPkgInfo.version) {
+            m_showingAppInfo.installedPkgInfo.pkgSize = srvPkgInfo.pkgSize;
+            m_showingAppInfo.installedPkgInfo.downloadUrl = srvPkgInfo.downloadUrl;
+        }
+    }
+
+
     m_model->setShowingAppInfo(m_showingAppInfo);
 
     const QString themeIconName = m_showingAppInfo.desktopInfo.themeIconName;

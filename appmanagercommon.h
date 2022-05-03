@@ -8,6 +8,10 @@
 
 namespace AM {
 struct PkgInfo {
+    QString infosFilePath; // 包信息文件路径
+    qint64 contentOffset; // 内容在包信息文件中的地址偏移
+    qint64 contentSize; // 内容大小
+    QString depositoryUrl; // 仓库地址
     QString pkgName;
     int installedSize;
     QString updatedTime;
@@ -22,6 +26,8 @@ struct PkgInfo {
     QStringList installedFileList;
     PkgInfo()
     {
+        contentOffset = 0;
+        contentSize = 0;
         installedSize = 0;
         pkgSize = 0;
     }

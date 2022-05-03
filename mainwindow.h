@@ -7,6 +7,7 @@ class DBlurEffectWidget;
 DWIDGET_END_NAMESPACE
 
 DWIDGET_USE_NAMESPACE
+DCORE_USE_NAMESPACE
 
 class MainWindow : public DMainWindow
 {
@@ -22,4 +23,5 @@ protected:
 private:
     DBlurEffectWidget *m_barBlurBg;
     DBlurEffectWidget *m_centralWidgetBlurBg;
+    bool m_isDeepin;
 };
