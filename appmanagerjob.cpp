@@ -368,7 +368,12 @@ void AppManagerJob::uninstallPkg(const QString &pkgName)
 
     QString error = proc->readAllStandardError();
     if (!error.isEmpty()) {
-        qDebug() << Q_FUNC_INFO << QString("uninstall %1 failed! ").arg(pkgName) << error;
+        qInfo() << Q_FUNC_INFO << QString("uninstall %1 failed! ").arg(pkgName) << error;
+
+        proc->close();
+        proc->deleteLater();
+        proc = nullptr;
+        return;
     }
 
     proc->close();
