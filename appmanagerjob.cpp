@@ -94,7 +94,7 @@ AppManagerJob::AppManagerJob(QObject *parent)
     , m_isInitiallized(false)
     , m_listViewModel(nullptr)
 {
-    m_downloadDirPath = QString("%1/Desktop/dowonloadedPkg").arg(QDir::homePath());
+    m_downloadDirPath = QString("%1/Desktop/downloadedPkg").arg(QDir::homePath());
     m_pkgBuildCacheDirPath = "/tmp/pkg-build-cache";
     m_pkgBuildDirPath = QString("%1/Desktop/pkgBuild").arg(QDir::homePath());
 }
