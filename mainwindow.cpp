@@ -44,8 +44,11 @@ MainWindow::MainWindow(QWidget *parent)
     m_isDeepin =  DSysInfo::isDeepin();
 
     DFrame *centralWidget = new DFrame(this);
-    QGSettings deepinSettings("com.deepin.xsettings");
-    int dtkWindowRadius = deepinSettings.get("dtk-window-radius").toInt();
+    int dtkWindowRadius = 8;
+    if (QGSettings::isSchemaInstalled("com.deepin.xsettings")) {
+        QGSettings deepinSettings("com.deepin.xsettings");
+        dtkWindowRadius = deepinSettings.get("dtk-window-radius").toInt();
+    }
     int internalPix =  dtkWindowRadius < 9 ? 0 : (dtkWindowRadius - 8) / 2;
     centralWidget->setContentsMargins(4 + internalPix, 0, 4 + internalPix, 4 + internalPix);
     setCentralWidget(centralWidget);
