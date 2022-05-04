@@ -6,6 +6,8 @@
 #include <DBlurEffectWidget>
 #include <DApplicationHelper>
 #include <DSysInfo>
+#include <DDialog>
+#include <QTextEdit>
 
 #include <QHBoxLayout>
 #include <QGSettings/QGSettings>
@@ -20,10 +22,17 @@ MainWindow::MainWindow(QWidget *parent)
     setTitlebarShadowEnabled(false);
     setFocusPolicy(Qt::FocusPolicy::ClickFocus);
 
-    titlebar()->setIcon(QIcon::fromTheme("chromium-app-list"));
+    titlebar()->setIcon(QIcon(":/icons/deepin/builtin/icons/grid_48px.svg"));
     titlebar()->setTitle("应用管理器");
     titlebar()->setFixedHeight(40);
     titlebar()->setBackgroundTransparent(true);
+
+    QMenu *menu = new QMenu(this);
+    titlebar()->setMenu(menu);
+
+    QAction *watchGuiAppListAction = new QAction(this);
+    watchGuiAppListAction->setText("复制启动器中所有应用包名");
+    menu->addAction(watchGuiAppListAction);
 
     m_centralWidgetBlurBg = new DBlurEffectWidget(this);
     m_centralWidgetBlurBg->setBlendMode(DBlurEffectWidget::BlendMode::BehindWindowBlend);
@@ -45,8 +54,40 @@ MainWindow::MainWindow(QWidget *parent)
     mainLayout->setContentsMargins(0, 0, 0, 0);
     centralWidget->setLayout(mainLayout);
 
-    AppManagerWidget *appManagerWidget = new AppManagerWidget(this);
+    // 应用管理
+    AppManagerModel *appManagerModel = new AppManagerModel(this);
+    AppManagerWidget *appManagerWidget = new AppManagerWidget(appManagerModel, this);
     mainLayout->addWidget(appManagerWidget);
+
+    // init connection
+    connect(watchGuiAppListAction, &QAction::triggered, this, [this, appManagerModel](bool checked) {
+        Q_UNUSED(checked);
+        QString uiAppPkgNameList;
+        for (const AM::AppInfo &info : appManagerModel->getAppInfosList()) {
+            if (info.desktopInfo.desktopPath.isEmpty()) {
+                continue;
+            }
+            uiAppPkgNameList.append(QString("%1 ").arg(info.pkgName));
+        }
+
+        QTextEdit *edit = new QTextEdit(this);
+        edit->setText(uiAppPkgNameList);
+        edit->setReadOnly(true);
+        QPalette pa = edit->palette();
+        pa.setColor(QPalette::ColorRole::Base, Qt::transparent);
+        edit->setPalette(pa);
+
+        DDialog *dlg = new DDialog(this);
+        dlg->setOnButtonClickedClose(true);
+        dlg->setTitle("启动器中所有应用包名");
+        dlg->setMinimumWidth(800);
+        dlg->addContent(edit);
+        dlg->setWindowOpacity(0.7);
+
+
+        dlg->exec();
+        dlg->deleteLater();
+    });
 
     // post init
     if (m_isDeepin) {

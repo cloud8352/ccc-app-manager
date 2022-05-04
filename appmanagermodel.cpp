@@ -191,6 +191,10 @@ bool AppManagerModel::extendPkgInfo(PkgInfo &pkgInfo)
             pkgInfo.description += infoLine;
             continue;
         }
+        if (infoLine.startsWith("Build-Depends: ")) {
+            isReadingDescription = false;
+            continue;
+        }
     }
 
     return true;

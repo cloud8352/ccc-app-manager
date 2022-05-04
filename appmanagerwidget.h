@@ -1,6 +1,7 @@
 #pragma once
 
 #include "appmanagercommon.h"
+#include "appmanagermodel.h"
 
 #include <DFrame>
 
@@ -27,7 +28,7 @@ class AppManagerWidget : public QWidget
 {
     Q_OBJECT
 public:
-    AppManagerWidget(QWidget *parent = nullptr);
+    AppManagerWidget(AppManagerModel *model, QWidget *parent = nullptr);
     virtual ~AppManagerWidget() override;
 
 public Q_SLOTS:

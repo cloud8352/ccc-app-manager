@@ -2,5 +2,8 @@
     <qresource prefix="/icons/deepin/builtin">
         <file>light/icons/am_filter_64px.svg</file>
         <file>dark/icons/am_filter_64px.svg</file>
+        <file>icons/grid_48px.svg</file>
+        <file>icons/app-manager_bak_64px.svg</file>
+        <file>icons/rotate_48px.svg</file>
     </qresource>
 </RCC>

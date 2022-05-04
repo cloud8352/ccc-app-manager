@@ -1,6 +1,5 @@
 #include "appmanagerwidget.h"
 #include "pkgdownloaddlg.h"
-#include "appmanagermodel.h"
 
 #include <DTitlebar>
 #include <DListView>
@@ -30,9 +29,9 @@
 
 using namespace AM;
 
-AppManagerWidget::AppManagerWidget(QWidget *parent)
+AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
     : QWidget(parent)
-    , m_model(nullptr)
+    , m_model(model)
     , m_waitingSpinner(nullptr)
     , m_contentWidget(nullptr)
     , m_searchLineEdit(nullptr)
@@ -53,8 +52,6 @@ AppManagerWidget::AppManagerWidget(QWidget *parent)
     , m_appFileListTextEdit(nullptr)
 {
     setFocusPolicy(Qt::FocusPolicy::ClickFocus);
-
-    m_model = new AppManagerModel(this);
 
     QHBoxLayout *mainLayout = new QHBoxLayout;
     mainLayout->setContentsMargins(0, 0, 0, 0);
@@ -92,7 +89,7 @@ AppManagerWidget::AppManagerWidget(QWidget *parent)
     QPushButton *reloadBtn = new QPushButton(this);
     reloadBtn->setFlat(true);
     reloadBtn->setToolTip("重载所有应用信息");
-    reloadBtn->setIcon(QIcon::fromTheme("ukuu"));
+    reloadBtn->setIcon(QIcon::fromTheme("rotate"));
     reloadBtn->setIconSize(QSize(30, 30));
     reloadBtn->setFixedSize(QSize(30, 30));
     guideOperatingLayout->addWidget(reloadBtn);
