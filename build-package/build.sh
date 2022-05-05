@@ -49,6 +49,13 @@ echo "未安装依赖：zlib 本脚本退出"
 exit 0
 fi
 
+DEPEND=`dpkg -l | grep libgsettings-qt-dev`
+if [ "$DEPEND" = "" ] ; then 
+echo "未安装依赖：libgsettings-qt-dev 本脚本退出"
+exit 0
+fi
+
+
 
 echo "依赖检查通过，开始编译"
 
@@ -78,6 +85,7 @@ rm -rf build
 
 #打包
 echo "构建软件包"
+mkdir -p pkg/DEBIAN
 SIZE=`du -s ./pkg/opt`
 SIZE=`echo ${SIZE%%.*}`
 # 生成control文件
