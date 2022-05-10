@@ -2,11 +2,12 @@
 #include "appmanagerwidget.h"
 
 #include <DTitlebar>
-#include <DFrame>
+//#include <DFrame>
+#include <DtkWidgets>
 #include <DBlurEffectWidget>
-#include <DApplicationHelper>
+//#include <DApplicationHelper>
 #include <DSysInfo>
-#include <DDialog>
+//#include <DDialog>
 #include <QTextEdit>
 
 #include <QHBoxLayout>
@@ -19,7 +20,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     setMinimumSize(1000, 600);
     // 设置背景
-    setTitlebarShadowEnabled(false);
+//    setTitlebarShadowEnabled(false);
     setFocusPolicy(Qt::FocusPolicy::ClickFocus);
 
     titlebar()->setIcon(QIcon(":/icons/deepin/builtin/icons/grid_48px.svg"));
@@ -36,6 +37,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     m_centralWidgetBlurBg = new DBlurEffectWidget(this);
     m_centralWidgetBlurBg->setBlendMode(DBlurEffectWidget::BlendMode::BehindWindowBlend);
+    m_centralWidgetBlurBg->setBlurEnabled(true);
     m_centralWidgetBlurBg->setMaskAlpha(100);
     m_centralWidgetBlurBg->setFixedSize(size());
     m_centralWidgetBlurBg->lower();
@@ -43,11 +45,11 @@ MainWindow::MainWindow(QWidget *parent)
     // 判断系统是否是deepin
     m_isDeepin =  DSysInfo::isDeepin();
 
-    DFrame *centralWidget = new DFrame(this);
+    QWidget *centralWidget = new QWidget(this);
     int dtkWindowRadius = 8;
     if (QGSettings::isSchemaInstalled("com.deepin.xsettings")) {
         QGSettings deepinSettings("com.deepin.xsettings");
-        dtkWindowRadius = deepinSettings.get("dtk-window-radius").toInt();
+//        dtkWindowRadius = deepinSettings.get("dtk-window-radius").toInt();
     }
     int internalPix =  dtkWindowRadius < 9 ? 0 : (dtkWindowRadius - 8) / 2;
     centralWidget->setContentsMargins(4 + internalPix, 0, 4 + internalPix, 4 + internalPix);
@@ -77,7 +79,7 @@ MainWindow::MainWindow(QWidget *parent)
         edit->setText(uiAppPkgNameList);
         edit->setReadOnly(true);
         QPalette pa = edit->palette();
-        pa.setColor(QPalette::ColorRole::Base, Qt::transparent);
+//        pa.setColor(QPalette::ColorRole::Base, Qt::transparent);
         edit->setPalette(pa);
 
         DDialog *dlg = new DDialog(this);
@@ -94,9 +96,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     // post init
     if (m_isDeepin) {
-        setAttribute(Qt::WA_TranslucentBackground, true);
-        m_centralWidgetBlurBg->setVisible(true);
-        titlebar()->setBackgroundTransparent(true);
+        setAttribute(Qt::WA_TranslucentBackground, false);
+        m_centralWidgetBlurBg->setVisible(false);
+        titlebar()->setBackgroundTransparent(false);
     } else {
         setAttribute(Qt::WA_TranslucentBackground, false);
         m_centralWidgetBlurBg->setVisible(false);

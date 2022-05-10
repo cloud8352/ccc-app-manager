@@ -3,8 +3,8 @@
 
 #include <DTitlebar>
 #include <DBlurEffectWidget>
-#include <DApplicationHelper>
-#include <DProgressBar>
+//#include <DApplicationHelper>
+//#include <DProgressBar>
 
 #include <QPushButton>
 #include <QHBoxLayout>
@@ -19,7 +19,7 @@
 using namespace AM;
 
 PkgDownloadDlg::PkgDownloadDlg(AppManagerModel *model, QWidget *parent)
-    : DFrame(parent)
+    : QWidget(parent)
     , m_model(model)
     , m_showingAppInfo(m_model->getShowingAppInfo())
     , m_centralWidgetBlurBg(nullptr)
@@ -34,17 +34,18 @@ PkgDownloadDlg::PkgDownloadDlg(AppManagerModel *model, QWidget *parent)
     , m_infoEdit(nullptr)
 {
     setMinimumSize(600, 400);
-    setWindowFlag(Qt::WindowType::Dialog);
+    setWindowFlags(Qt::WindowType::Dialog);
     setWindowModality(Qt::WindowModality::ApplicationModal);
     setFocusPolicy(Qt::FocusPolicy::ClickFocus);
 
     // 设置背景
-    setAttribute(Qt::WA_TranslucentBackground);
+//    setAttribute(Qt::WA_TranslucentBackground);
 
     m_centralWidgetBlurBg = new DBlurEffectWidget(this);
     m_centralWidgetBlurBg->setBlendMode(DBlurEffectWidget::BlendMode::BehindWindowBlend);
     m_centralWidgetBlurBg->setFixedSize(size());
     m_centralWidgetBlurBg->lower();
+    m_centralWidgetBlurBg->setVisible(false);
 
     QVBoxLayout *mainLayout = new QVBoxLayout;
     mainLayout->setContentsMargins(0, 0, 0, 0);
@@ -130,7 +131,7 @@ PkgDownloadDlg::PkgDownloadDlg(AppManagerModel *model, QWidget *parent)
     mainLayout->addLayout(progressLayout);
 
     progressLayout->addSpacing(LEFT_MARGIN);
-    m_progressBar = new DProgressBar(this);
+    m_progressBar = new QProgressBar(this);
     m_progressBar->setMaximum(100);
     m_progressBar->setValue(50);
     m_progressBar->setTextVisible(true);
@@ -165,14 +166,14 @@ PkgDownloadDlg::~PkgDownloadDlg()
 
 void PkgDownloadDlg::resizeEvent(QResizeEvent *event)
 {
-    DFrame::resizeEvent(event);
+    QWidget::resizeEvent(event);
 
     m_centralWidgetBlurBg->setFixedSize(size());
 }
 
 void PkgDownloadDlg::closeEvent(QCloseEvent *event)
 {
-    DFrame::closeEvent(event);
+    QWidget::closeEvent(event);
     this->hide();
     this->deleteLater();
 }

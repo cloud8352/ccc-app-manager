@@ -2,7 +2,7 @@
 
 #include <DApplication>
 #include <DWidgetUtil>
-#include <DApplicationSettings>
+//#include <DApplicationSettings>
 
 #include <QObject>
 
@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
     a.setQuitOnLastWindowClosed(true);//关闭主窗口后关闭关于
 
     // 保存窗口主题设置
-    DApplicationSettings settings;
+//    DApplicationSettings settings;
 
     MainWindow w;
     w.show();

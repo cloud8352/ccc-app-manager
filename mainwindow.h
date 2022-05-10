@@ -1,6 +1,7 @@
 #pragma once
 
 #include <DMainWindow>
+#include <DtkWidgets>
 
 DWIDGET_BEGIN_NAMESPACE
 class DBlurEffectWidget;

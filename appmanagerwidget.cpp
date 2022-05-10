@@ -2,14 +2,17 @@
 #include "pkgdownloaddlg.h"
 
 #include <DTitlebar>
-#include <DListView>
-#include <DFrame>
+
+#include <DtkWidgets>
+
+//#include <DListView>
+//#include <DFrame>
 #include <DBlurEffectWidget>
-#include <DApplicationHelper>
+//#include <DApplicationHelper>
 #include <DSuggestButton>
-#include <DButtonBox>
+//#include <DButtonBox>
 #include <DSpinner>
-#include <DDialog>
+//#include <DDialog>
 
 #include <QPushButton>
 #include <QLineEdit>
@@ -47,7 +50,6 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
     , m_appNameLable(nullptr)
     , m_infoBtn(nullptr)
     , m_filesBtn(nullptr)
-    , m_infoSwitchBtn(nullptr)
     , m_appInfoTextEdit(nullptr)
     , m_appFileListTextEdit(nullptr)
 {
@@ -89,7 +91,7 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
     QPushButton *reloadBtn = new QPushButton(this);
     reloadBtn->setFlat(true);
     reloadBtn->setToolTip("重载所有应用信息");
-    reloadBtn->setIcon(QIcon::fromTheme("rotate"));
+    reloadBtn->setIcon(QIcon(":/icons/deepin/builtin/icons/rotate_48px.svg"));
     reloadBtn->setIconSize(QSize(30, 30));
     reloadBtn->setFixedSize(QSize(30, 30));
     guideOperatingLayout->addWidget(reloadBtn);
@@ -123,12 +125,12 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
     m_appListModel = new QStandardItemModel(this);
 
     m_appListView = new DListView(this);
-    m_appListView->setSpacing(0);
-    m_appListView->setItemSpacing(1);
+//    m_appListView->setSpacing(0);
+//    m_appListView->setItemSpacing(1);
     m_appListView->setTextElideMode(Qt::TextElideMode::ElideMiddle);
     m_appListView->setEditTriggers(DListView::EditTrigger::NoEditTriggers);
     m_appListView->setAutoFillBackground(true);
-    m_appListView->setItemSize(QSize(80, 48));
+//    m_appListView->setItemSize(QSize(80, 48));
     m_appListView->setModel(m_appListModel);
     leftGuideLayout->addWidget(m_appListView, 1);
 
@@ -138,9 +140,9 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
     m_appCountLabel->setAlignment(Qt::AlignLeft);
     leftGuideLayout->addWidget(m_appCountLabel);
 
-    DFrame *infoFrame = new DFrame(this);
+    QWidget *infoFrame = new QWidget(this);
     infoFrame->setContentsMargins(0, 0, 0, 0);
-    infoFrame->setBackgroundRole(DPalette::ItemBackground);
+//    infoFrame->setBackgroundRole(DPalette::ItemBackground);
     // 添加到分割器
     contentSplitter->addWidget(infoFrame);
 
@@ -170,40 +172,40 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
     appAbstractLayout->addSpacing(10);
 
     // switch btn area
-    DFrame *switchAreaTopSep = new DFrame(this);
-    switchAreaTopSep->setBackgroundRole(DPalette::ItemBackground);
+    QWidget *switchAreaTopSep = new QWidget(this);
+//    switchAreaTopSep->setBackgroundRole(DPalette::ItemBackground);
     switchAreaTopSep->setFixedHeight(2);
     infoFrameLayout->addWidget(switchAreaTopSep);
 
     infoFrameLayout->addSpacing(5);
-    QList<DButtonBoxButton *> switchBtnList;
-    m_infoBtn = new DButtonBoxButton("信息", this);
+//    QList<DPushButton *> switchBtnList;
+    m_infoBtn = new DPushButton(this);
+    m_infoBtn->setText("信息");
     m_infoBtn->setMinimumWidth(100);
-    switchBtnList.append(m_infoBtn);
+//    switchBtnList.append(m_infoBtn);
+    infoFrameLayout->addWidget(m_infoBtn, 0, Qt::AlignLeft);
 
-    m_filesBtn = new DButtonBoxButton("文件", this);
+    m_filesBtn = new DPushButton(this);
+    m_filesBtn->setText("文件");
     m_filesBtn->setMinimumWidth(100);
-    switchBtnList.append(m_filesBtn);
-
-    m_infoSwitchBtn = new DButtonBox(this);
-    m_infoSwitchBtn->setButtonList(switchBtnList, true);
-    infoFrameLayout->addWidget(m_infoSwitchBtn, 0, Qt::AlignLeft);
+//    switchBtnList.append(m_filesBtn);
+    infoFrameLayout->addWidget(m_filesBtn, 0, Qt::AlignLeft);
 
     // -------------- 信息展示区
     m_appInfoTextEdit = new QTextEdit(this);
     m_appInfoTextEdit->setLineWidth(0);
     m_appInfoTextEdit->setReadOnly(true);
-    DPalette pa = DApplicationHelper::instance()->palette(m_appInfoTextEdit);
-    pa.setColor(DPalette::ColorRole::Base, Qt::transparent);
-    DApplicationHelper::instance()->setPalette(m_appInfoTextEdit, pa);
+//    DPalette pa = DApplicationHelper::instance()->palette(m_appInfoTextEdit);
+//    pa.setColor(DPalette::ColorRole::Base, Qt::transparent);
+//    DApplicationHelper::instance()->setPalette(m_appInfoTextEdit, pa);
     infoFrameLayout->addWidget(m_appInfoTextEdit);
 
     m_appFileListTextEdit = new QTextEdit(this);
     m_appFileListTextEdit->setLineWidth(0);
     m_appFileListTextEdit->setReadOnly(true);
-    pa = DApplicationHelper::instance()->palette(m_appFileListTextEdit);
-    pa.setColor(DPalette::ColorRole::Base, Qt::transparent);
-    DApplicationHelper::instance()->setPalette(m_appFileListTextEdit, pa);
+//    pa = DApplicationHelper::instance()->palette(m_appFileListTextEdit);
+//    pa.setColor(DPalette::ColorRole::Base, Qt::transparent);
+//    DApplicationHelper::instance()->setPalette(m_appFileListTextEdit, pa);
     infoFrameLayout->addWidget(m_appFileListTextEdit);
 
     // 信息展示去底部第一行
@@ -292,12 +294,11 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
         proc.startDetached(cmd);
     });
 
-    connect(m_infoSwitchBtn, &DButtonBox::buttonClicked, this, [this](QAbstractButton *btn) {
-        if (m_infoBtn == btn) {
+    connect(m_infoBtn, &DPushButton::clicked, this, [this](bool checked) {
             this->showAppInfo(m_showingAppInfo);
-        } else if (m_filesBtn == btn) {
+    });
+    connect(m_filesBtn, &DPushButton::clicked, this, [this](bool checked)  {
             this->showAppFileList(m_showingAppInfo);
-        }
     });
 
     // 卸载
@@ -324,7 +325,7 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
     connect(getPkgFromLocalBtn, &QPushButton::clicked, this, [this](bool) {
         Q_EMIT this->m_model->notifyThreadBuildPkg(m_showingAppInfo);
         DDialog *dlg = new DDialog(this);
-        dlg->setCloseButtonVisible(false);
+//        dlg->setCloseButtonVisible(false);
         QString title = QString("%1安装包构建中...").arg(m_showingAppInfo.pkgName);
         dlg->setTitle(title);
         // 构建目录
