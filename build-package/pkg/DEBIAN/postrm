@@ -1,0 +1,7 @@
+#!/bin/sh
+set -e
+
+# 删除desktop链接
+rm -rf /usr/share/applications/com.github.ccc-app-manager.desktop
+
+exit 0

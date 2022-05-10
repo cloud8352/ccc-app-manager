@@ -3,16 +3,17 @@
 #include "appmanagercommon.h"
 #include "appmanagermodel.h"
 
-#include <DFrame>
+//#include <DFrame>
+#include <DtkWidgets>
 
 class AppManagerModel;
 
 DWIDGET_BEGIN_NAMESPACE
-class DListView;
-class DBlurEffectWidget;
-class DButtonBoxButton;
-class DButtonBox;
-class DSpinner;
+//class DListView;
+//class DBlurEffectWidget;
+//class DButtonBoxButton;
+//class DButtonBox;
+//class DSpinner;
 DWIDGET_END_NAMESPACE
 
 class QStandardItemModel;
@@ -71,9 +72,8 @@ private:
     QLabel *m_appAbstractLabel;
     QLabel *m_appNameLable;
 
-    DButtonBoxButton *m_infoBtn;
-    DButtonBoxButton *m_filesBtn;
-    DButtonBox *m_infoSwitchBtn;
+    DPushButton *m_infoBtn;
+    DPushButton *m_filesBtn;
     QTextEdit *m_appInfoTextEdit;
     QTextEdit *m_appFileListTextEdit;
 };
