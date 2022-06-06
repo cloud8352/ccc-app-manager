@@ -287,9 +287,9 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
     });
 
     connect(openBtn, &QPushButton::clicked, this, [this](bool) {
-        QString cmd = m_showingAppInfo.desktopInfo.exec;
         QProcess proc;
-        proc.startDetached(cmd);
+        proc.startDetached("dex", {m_showingAppInfo.desktopInfo.desktopPath});
+        proc.close();
     });
 
     connect(m_infoSwitchBtn, &DButtonBox::buttonClicked, this, [this](QAbstractButton *btn) {
@@ -383,13 +383,6 @@ AppManagerWidget::~AppManagerWidget()
 void AppManagerWidget::showAppInfo(const AppInfo &info)
 {
     m_showingAppInfo = info;
-
-    // 拓展已安装应用信息
-    if (m_showingAppInfo.isInstalled) {
-        if (!m_model->extendPkgInfo(m_showingAppInfo.installedPkgInfo)) {
-            return;
-        }
-    }
 
     // 拓展仓库应用信息
     for (PkgInfo &srvPkgInfo : m_showingAppInfo.pkgInfoList) {

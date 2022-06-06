@@ -13,6 +13,12 @@ class QFile;
 class QStandardItemModel;
 QT_END_NAMESPACE
 
+#define OH_MY_DDE_PKG_NAME "top.yzzi.youjian"
+#define PROC_INFO_PLUGIN_PKG_NAME "com.github.proc-info-plugin"
+// 本地安装包路径
+#define OH_MY_DDE_LOCAL_PKG_PATH "/opt/apps/com.github.ccc-app-manager/files/pkg/top.yzzi.youjian_1.0.3_amd64.deb"
+#define PROC_INFO_PLUGIN_LOCAL_PKG_PATH "/opt/apps/com.github.ccc-app-manager/files/pkg/com.github.proc-info-plugin_0.0.1_amd64.deb"
+
 class AppManagerJob : public QObject
 {
     Q_OBJECT
@@ -45,6 +51,8 @@ public Q_SLOTS:
     void createListViewMode(const QList<AM::AppInfo> &list);
 
     void uninstallPkg(const QString &pkgName);
+    void installOhMyDDE();
+    void installProcInfoPlugin();
 
 Q_SIGNALS:
     void loadAppInfosFinished();
@@ -60,12 +68,14 @@ Q_SIGNALS:
     void uninstallPkgFinished(const QString &pkgName);
     // 构建安装包任务完成
     void buildPkgTaskFinished(bool successed, const AM::AppInfo &info);
+    void installOhMyDDEFinished(bool successed);
+    void installProcInfoPluginFinished(bool successed);
 
 private:
     QList<QString> readSourceUrlList(const QString &filePath);
     void reloadSourceUrlList();
     // 从包信息列表文件中获取包信息列表
-    bool getPkgInfoListFromFile(QList<AM::PkgInfo> &pkgInfoList, const QString &pkgInfosFilePath);
+    bool getPkgInfoListFromFile(QList<AM::PkgInfo> &pkgInfoList, const QString &pkgInfosFilePath, bool isCompact = false);
 
     // 从包信息列表中加载仓库应用信息列表
     void loadSrvAppInfosFromFile(QMap<QString, AM::AppInfo> &appInfosMap, const QString &pkgInfosFilePath);
@@ -82,6 +92,8 @@ private:
     QStandardItemModel *getItemModelFromAppInfoList(const QList<AM::AppInfo> &appInfoList);
     // 构建安装包任务
     bool buildPkg(const AM::AppInfo &info);
+    // 安全本地软件包
+    bool installLocalPkg(const QString &path);
 
 private:
     QMutex m_mutex;

@@ -8,6 +8,7 @@
 #include <DSysInfo>
 #include <DDialog>
 #include <QTextEdit>
+#include <QProcess>
 
 #include <QHBoxLayout>
 #include <QGSettings/QGSettings>
@@ -17,7 +18,8 @@ MainWindow::MainWindow(QWidget *parent)
     , m_centralWidgetBlurBg(nullptr)
     , m_isDeepin(false)
 {
-    setMinimumSize(1000, 600);
+    setMinimumSize(500, 300);
+    resize(1000, 600);
     // 设置背景
     setTitlebarShadowEnabled(false);
     setFocusPolicy(Qt::FocusPolicy::ClickFocus);
@@ -33,6 +35,14 @@ MainWindow::MainWindow(QWidget *parent)
     QAction *watchGuiAppListAction = new QAction(this);
     watchGuiAppListAction->setText("复制启动器中所有应用包名");
     menu->addAction(watchGuiAppListAction);
+
+    QAction *openOhMyDDEAction = new QAction(this);
+    openOhMyDDEAction->setText("打开oh-my-dde");
+    menu->addAction(openOhMyDDEAction);
+
+    QAction *openProInfoWindowAction = new QAction(this);
+    openProInfoWindowAction->setText("打开进程信息窗口");
+    menu->addAction(openProInfoWindowAction);
 
     m_centralWidgetBlurBg = new DBlurEffectWidget(this);
     m_centralWidgetBlurBg->setBlendMode(DBlurEffectWidget::BlendMode::BehindWindowBlend);
@@ -87,9 +97,41 @@ MainWindow::MainWindow(QWidget *parent)
         dlg->addContent(edit);
         dlg->setWindowOpacity(0.7);
 
-
         dlg->exec();
         dlg->deleteLater();
+    });
+    connect(openOhMyDDEAction, &QAction::triggered, this, [appManagerModel](bool checked) {
+        Q_UNUSED(checked);
+        if (appManagerModel->isPkgInstalled(OH_MY_DDE_PKG_NAME)) {
+            QProcess::startDetached("dex", {appManagerModel->getAppInfo(OH_MY_DDE_PKG_NAME).desktopInfo.desktopPath});
+        } else {
+            // 安装
+            DDialog dlg;
+            dlg.setMessage("是否安装oh-my-dde?");
+            dlg.addButton("是", true, DDialog::ButtonType::ButtonRecommend);
+            dlg.addButton("否", false, DDialog::ButtonType::ButtonNormal);
+            int ret = dlg.exec();
+            if (0 == ret) {
+                Q_EMIT appManagerModel->notifyThreadInstallOhMyDDE();
+            }
+        }
+    });
+
+    connect(openProInfoWindowAction, &QAction::triggered, this, [appManagerModel](bool checked) {
+        Q_UNUSED(checked);
+        if (appManagerModel->isPkgInstalled(PROC_INFO_PLUGIN_PKG_NAME)) {
+            QProcess::startDetached("dex", {appManagerModel->getAppInfo(PROC_INFO_PLUGIN_PKG_NAME).desktopInfo.desktopPath});
+        } else {
+            // 安装
+            DDialog dlg;
+            dlg.setMessage("是否安装dde进程信息插件?");
+            dlg.addButton("是", true, DDialog::ButtonType::ButtonRecommend);
+            dlg.addButton("否", false, DDialog::ButtonType::ButtonNormal);
+            int ret = dlg.exec();
+            if (0 == ret) {
+                Q_EMIT appManagerModel->notifyThreadInstallProcInfoPlugin();
+            }
+        }
     });
 
     // post init

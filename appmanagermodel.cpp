@@ -1,5 +1,4 @@
 #include "appmanagermodel.h"
-#include "appmanagerjob.h"
 #include <qurl.h>
 #include <QThread>
 #include <QDebug>
@@ -200,6 +199,27 @@ bool AppManagerModel::extendPkgInfo(PkgInfo &pkgInfo)
     return true;
 }
 
+bool AppManagerModel::isPkgInstalled(const QString &pkgName)
+{
+    const QList<AppInfo> &appList = m_appManagerJob->getAppInfosMap().values();
+    for (QList<AppInfo>::const_iterator iter = appList.cbegin();
+         iter != appList.cend(); ++iter) {
+        if (!iter->isInstalled) {
+            continue;
+        }
+        if (pkgName == iter->pkgName) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+AppInfo AppManagerModel::getAppInfo(const QString &pkgName)
+{
+    return m_appManagerJob->getAppInfosMap().value(pkgName);
+}
+
 void AppManagerModel::initData()
 {
     // 注册结构体
@@ -252,6 +272,14 @@ void AppManagerModel::initConnection()
     connect(this, &AppManagerModel::notifyThreadBuildPkg, m_appManagerJob, &AppManagerJob::startBuildPkgTask);
     // 构建安装包任务完成
     connect(m_appManagerJob, &AppManagerJob::buildPkgTaskFinished, this, &AppManagerModel::buildPkgTaskFinished);
+    // 通知安装oh-my-dde
+    connect(this, &AppManagerModel::notifyThreadInstallOhMyDDE, m_appManagerJob, &AppManagerJob::installOhMyDDE);
+    // 安装oh-my-dde完成
+    connect(m_appManagerJob, &AppManagerJob::installOhMyDDEFinished, this, &AppManagerModel::installOhMyDDEFinished);
+    // 通知安装proc-info-plugin
+    connect(this, &AppManagerModel::notifyThreadInstallProcInfoPlugin, m_appManagerJob, &AppManagerJob::installProcInfoPlugin);
+    // 安装proc-info-plugin完成
+    connect(m_appManagerJob, &AppManagerJob::installProcInfoPluginFinished, this, &AppManagerModel::installProcInfoPluginFinished);
 }
 
 void AppManagerModel::postInit()

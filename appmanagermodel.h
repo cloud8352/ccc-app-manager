@@ -1,11 +1,10 @@
 #pragma once
 
 #include "appmanagercommon.h"
+#include "appmanagerjob.h"
 
 #include <QObject>
 #include <QMap>
-
-class AppManagerJob;
 
 class QStandardItemModel;
 
@@ -35,6 +34,10 @@ public:
     QString getPkgBuildDirPath() const;
     // 拓展包信息
     bool extendPkgInfo(AM::PkgInfo &pkgInfo);
+    // 软件包是否已安装
+    bool isPkgInstalled(const QString &pkgName);
+    // 获取应用信息
+    AM::AppInfo getAppInfo(const QString &pkgName);
 
 Q_SIGNALS:
     void notifyThreadreloadAppInfos();
@@ -55,6 +58,14 @@ Q_SIGNALS:
     void notifyThreadBuildPkg(const AM::AppInfo &info);
     // 构建安装包任务完成
     void buildPkgTaskFinished(bool successed, const AM::AppInfo &info);
+    // 通知安装oh-my-dde
+    void notifyThreadInstallOhMyDDE();
+    // 安装oh-my-dde完成
+    void installOhMyDDEFinished(bool successed);
+    // 通知安装proc-info-plugin
+    void notifyThreadInstallProcInfoPlugin();
+    // 安装proc-info-plugin完成
+    void installProcInfoPluginFinished(bool successed);
 
 private:
     void initData();

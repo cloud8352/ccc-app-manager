@@ -383,6 +383,18 @@ void AppManagerJob::uninstallPkg(const QString &pkgName)
     Q_EMIT uninstallPkgFinished(pkgName);
 }
 
+void AppManagerJob::installOhMyDDE()
+{
+    bool successed = installLocalPkg(OH_MY_DDE_LOCAL_PKG_PATH);
+    Q_EMIT installOhMyDDEFinished(successed);
+}
+
+void AppManagerJob::installProcInfoPlugin()
+{
+    bool successed = installLocalPkg(PROC_INFO_PLUGIN_LOCAL_PKG_PATH);
+    Q_EMIT installProcInfoPluginFinished(successed);
+}
+
 QList<QString> AppManagerJob::readSourceUrlList(const QString &filePath)
 {
     QList<QString> sourceUrlList;
@@ -430,7 +442,8 @@ void AppManagerJob::reloadSourceUrlList()
 }
 
 // 从包信息列表文件中获取应用信息列表
-bool AppManagerJob::getPkgInfoListFromFile(QList<PkgInfo> &pkgInfoList, const QString &pkgInfosFilePath)
+// isCompact : 是否获取简洁信息
+bool AppManagerJob::getPkgInfoListFromFile(QList<PkgInfo> &pkgInfoList, const QString &pkgInfosFilePath, bool isCompact)
 {
     // 从文件名中获取仓库网址，
     // 如：/var/lib/apt/lists/pools.uniontech.com_ppa_dde-eagle_dists_eagle_1041_main_binary-amd64_Packages
@@ -464,30 +477,105 @@ bool AppManagerJob::getPkgInfoListFromFile(QList<PkgInfo> &pkgInfoList, const QS
 
     PkgInfo pkgInfo;
     QTextStream txtStrem(&pkgInfosFile);
-    bool isReadingFirstApp = true;
+    qint64 lastPkgContentOffset = 0;
     qint64 contentOffset = 0;
-    while (!pkgInfosFile.atEnd()) {
-        if (!isReadingFirstApp && 0 == pkgInfo.contentOffset) {
-            pkgInfo.contentOffset = contentOffset;
+    bool isReadingDescription = false;
+
+    // 是否获取简洁信息
+    if (isCompact) {
+        while (!pkgInfosFile.atEnd()) {
+            const QByteArray ba = pkgInfosFile.readLine();
+            contentOffset += ba.size();
+
+            QString lineText = QString::fromUtf8(ba).remove("\n");
+            if (lineText.startsWith("Package: ")) {
+                pkgInfo.pkgName = lineText.split(": ").last();
+                continue;
+            }
+
+            // 检测到下一包信息
+            if (lineText.isEmpty()) {
+                pkgInfo.infosFilePath = pkgInfosFilePath;
+                pkgInfo.depositoryUrl = depositoryUrlStr;
+                pkgInfo.contentOffset = contentOffset;
+                pkgInfo.contentSize = contentOffset - lastPkgContentOffset;
+                lastPkgContentOffset = contentOffset;
+                pkgInfoList.append(pkgInfo);
+                pkgInfo = {};
+            }
         }
+    } else {
+        while (!pkgInfosFile.atEnd()) {
+            const QByteArray ba = pkgInfosFile.readLine();
+            contentOffset += ba.size();
 
-        const QByteArray ba = pkgInfosFile.readLine();
-        contentOffset += ba.size();
+            QString lineText = QString::fromUtf8(ba).remove("\n");
+            if (lineText.startsWith("Package: ")) {
+                pkgInfo.pkgName = lineText.split(": ").last();
+                continue;
+            }
 
-        QString lineText = QString::fromUtf8(ba).remove("\n");
-        if (lineText.startsWith("Package: ")) {
-            pkgInfo.pkgName = lineText.split(": ").last();
-            continue;
-        }
+            if (lineText.startsWith("Installed-Size: ")) {
+                pkgInfo.installedSize = lineText.split(": ").last().toInt();
+                continue;
+            }
+            if (lineText.startsWith("Maintainer: ")) {
+                pkgInfo.maintainer = lineText.split(": ").last();
+                continue;
+            }
+            if (lineText.startsWith("Architecture: ")) {
+                pkgInfo.arch = lineText.split(": ").last();
+                continue;
+            }
+            if (lineText.startsWith("Version: ")) {
+                pkgInfo.version = lineText.split(": ").last();
+                continue;
+            }
+            if (lineText.startsWith("Depends: ")) {
+                pkgInfo.depends = lineText.split(": ").last();
+                continue;
+            }
+            if (lineText.startsWith("Filename: ")) {
+                const QString downloadFileName = lineText.split(": ").last();
+                pkgInfo.downloadUrl = QString("%1/%2").arg(pkgInfo.depositoryUrl).arg(downloadFileName);
+                continue;
+            }
+            if (lineText.startsWith("Size: ")) {
+                pkgInfo.pkgSize = lineText.split(": ").last().toInt();
+                continue;
+            }
 
-        // 检测到下一包信息
-        if (lineText.isEmpty()) {
-            pkgInfo.infosFilePath = pkgInfosFilePath;
-            pkgInfo.depositoryUrl = depositoryUrlStr;
-            pkgInfo.contentSize = contentOffset - pkgInfo.contentOffset;
-            pkgInfoList.append(pkgInfo);
-            pkgInfo = {};
-            isReadingFirstApp = false;
+            if (lineText.startsWith("Homepage: ")) {
+                pkgInfo.homepage = lineText.split(": ").last();
+                continue;
+            }
+
+
+            if (lineText.startsWith("Description: ")) {
+                pkgInfo.description = lineText.split(": ").last();
+                pkgInfo.description.append("\n");
+                isReadingDescription = true;
+                continue;
+            }
+            if (lineText.startsWith(" ") && isReadingDescription) {
+                pkgInfo.description += lineText;
+                continue;
+            }
+            if (lineText.startsWith("Build-Depends: ")) {
+                isReadingDescription = false;
+                continue;
+            }
+
+            // 检测到下一包信息
+            if (lineText.isEmpty()) {
+                pkgInfo.infosFilePath = pkgInfosFilePath;
+                pkgInfo.depositoryUrl = depositoryUrlStr;
+                pkgInfo.contentOffset = contentOffset;
+                pkgInfo.contentSize = contentOffset - lastPkgContentOffset;
+                lastPkgContentOffset = contentOffset;
+                pkgInfoList.append(pkgInfo);
+                pkgInfo = {};
+            }
         }
     }
     pkgInfosFile.close();
@@ -500,7 +588,7 @@ bool AppManagerJob::getPkgInfoListFromFile(QList<PkgInfo> &pkgInfoList, const QS
 void AppManagerJob::loadSrvAppInfosFromFile(QMap<QString, AppInfo> &appInfosMap, const QString &pkgInfosFilePath)
 {
     QList<PkgInfo> pkgInfoList;
-    getPkgInfoListFromFile(pkgInfoList, pkgInfosFilePath);
+    getPkgInfoListFromFile(pkgInfoList, pkgInfosFilePath, true);
     qInfo() << Q_FUNC_INFO << pkgInfosFilePath << pkgInfoList.size();
 
     for (const PkgInfo &pkgInfo : pkgInfoList) {
@@ -873,6 +961,32 @@ bool AppManagerJob::buildPkg(const AppInfo &info)
         return false;
     }
     dpkgBuildProc.close();
+
+    return true;
+}
+
+bool AppManagerJob::installLocalPkg(const QString &path)
+{
+    QProcess *proc = new QProcess(this);
+    proc->start("pkexec", {"dpkg", "-i", path});
+    proc->waitForStarted();
+    proc->write("Y\n");
+    proc->waitForFinished();
+    proc->waitForReadyRead();
+
+    QString error = proc->readAllStandardError();
+    if (!error.isEmpty()) {
+        qInfo() << Q_FUNC_INFO << QString("install %1 failed! ").arg(path) << error;
+
+        proc->close();
+        proc->deleteLater();
+        proc = nullptr;
+        return false;
+    }
+
+    proc->close();
+    proc->deleteLater();
+    proc = nullptr;
 
     return true;
 }

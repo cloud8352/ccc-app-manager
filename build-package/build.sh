@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ###############设定编译变量
-VERSION="0.0.4-t1"
+VERSION="0.0.5-t1"
 
 echo "build.sh修改自柚柚的 https://gitee.com/deepin-opensource/one-cuter"
 
@@ -43,7 +43,7 @@ echo "未安装依赖：qtbase5-dev 本脚本退出"
 exit 0
 fi
 
-DEPEND=`dpkg -l | grep zlib`
+DEPEND=`dpkg -l | grep zlib1g-dev`
 if [ "$DEPEND" = "" ] ; then 
 echo "未安装依赖：zlib 本脚本退出"
 exit 0
@@ -102,7 +102,7 @@ Version: $VERSION
 Architecture: $ARCH
 Maintainer: keke <243768648@qq.com>
 Installed-Size: $SIZE
-Depends: libc6 (>= 2.28), libgcc1 (>= 1:3.4) | libgcc-s1(>=12), libgl1, libqt5core5a (>= 5.11.0~rc1), libqt5gui5 (>= 5.8.0), libqt5network5 (>= 5.0.2), libqt5widgets5 (>= 5.0.2), libdtkcore5 (>= 5.4), libdtkgui5 (>= 5.4), libdtkwidget5 (>= 5.4)
+Depends: libc6 (>= 2.28), libgcc1 (>= 1:3.4) | libgcc-s1(>=12), libgl1, libqt5core5a (>= 5.11.0~rc1), libqt5gui5 (>= 5.8.0), libqt5network5 (>= 5.0.2), libqt5widgets5 (>= 5.0.2), libdtkcore5 (>= 5.4), libdtkgui5 (>= 5.4), libdtkwidget5 (>= 5.4), dex
 Description: manage your applications.
  应用管理器，可查看应用包信息，可卸载和打开应用，可在线或离线提取安装包。支持deepin、uos系统。
 Homepage: https://gitee.com/ct243768648/ccc-app-manager

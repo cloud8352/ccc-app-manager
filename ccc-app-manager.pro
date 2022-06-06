@@ -54,7 +54,10 @@ opt_desktop.path = /opt/apps/com.github.ccc-app-manager/entries
 usr_desktop.files = ./com.github.ccc-app-manager.desktop
 usr_desktop.path = /usr/share/applications
 
-INSTALLS += target icon opt_desktop usr_desktop
+pkg.files = ./pkg/*
+pkg.path = /opt/apps/com.github.ccc-app-manager/files/pkg
+
+INSTALLS += target icon opt_desktop usr_desktop pkg
 
 RESOURCES += \
     resources/icons.qrc
