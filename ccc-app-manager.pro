@@ -32,7 +32,8 @@ SOURCES += \
     appmanagerwidget.cpp \
     appmanagercommon.cpp \
     pkgdownloaddlg.cpp \
-    appmanagermodel.cpp
+    appmanagermodel.cpp \
+    pkgmonitor.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -40,7 +41,8 @@ HEADERS += \
     appmanagerwidget.h \
     appmanagercommon.h \
     pkgdownloaddlg.h \
-    appmanagermodel.h
+    appmanagermodel.h \
+    pkgmonitor.h
 
 # Default rules for deployment.
 target.path = /opt/apps/com.github.ccc-app-manager/files

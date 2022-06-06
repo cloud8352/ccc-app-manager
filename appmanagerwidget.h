@@ -4,6 +4,7 @@
 #include "appmanagermodel.h"
 
 #include <DFrame>
+#include <QStandardItem>
 
 class AppManagerModel;
 
@@ -28,6 +29,13 @@ class AppManagerWidget : public QWidget
 {
     Q_OBJECT
 public:
+    enum DisplayRangeType {
+        All = 0,
+        Installed,
+        Gui,
+        Searched
+    };
+
     AppManagerWidget(AppManagerModel *model, QWidget *parent = nullptr);
     virtual ~AppManagerWidget() override;
 
@@ -37,6 +45,10 @@ public Q_SLOTS:
     void onSearchEditingFinished();
     void onSearchTaskFinished();
     void onCreateListViewModeFinished();
+    // 软件安装变动
+    void onAppInstalled(const AM::AppInfo &appInfo);
+    void onAppUpdated(const AM::AppInfo &appInfo);
+    void onAppUninstalled(const AM::AppInfo &appInfo);
 
 private:
     QString formateAppInfo(const AM::AppInfo &info);
@@ -47,6 +59,10 @@ private:
     void showSearchedAppInfoList();
 
     void setLoading(bool loading);
+    QList<QStandardItem *> createViewItemList(const AM::AppInfo &appInfo);
+    void updateItemFromAppInfo(QStandardItem *item, const AM::AppInfo &appInfo);
+    // 更新应用个数标签
+    void updateAppCountLabel();
 
 private:
     QList<AM::AppInfo> m_appInfoList;
@@ -64,6 +80,7 @@ private:
     QAction *m_showInstalledAppAction;
     QAction *m_showGuiAppAction;
     QAction *m_showSearchedAppAction;
+    DisplayRangeType m_displayRangeType; // 显示范围类型
 
     QStandardItemModel *m_appListModel;
     DListView *m_appListView;

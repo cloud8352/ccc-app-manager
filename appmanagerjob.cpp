@@ -92,7 +92,11 @@ ComPressError zlibUnCompress(const char *srcName, const char *destName)
 AppManagerJob::AppManagerJob(QObject *parent)
     : QObject(parent)
     , m_isInitiallized(false)
+    , m_downloadingFile(nullptr)
+    , m_netManager(nullptr)
+    , m_netReply(nullptr)
     , m_listViewModel(nullptr)
+    , m_pkgMonitor(nullptr)
 {
     m_downloadDirPath = QString("%1/Desktop/downloadedPkg").arg(QDir::homePath());
     m_pkgBuildCacheDirPath = "/tmp/pkg-build-cache";
@@ -158,6 +162,11 @@ void AppManagerJob::init()
     reloadAppInfos();
 
     m_netManager = new QNetworkAccessManager(this);
+    // 包监视器
+    m_pkgMonitor = new PkgMonitor(this);
+
+    initConnection();
+
     m_isInitiallized = true;
 }
 
@@ -178,7 +187,7 @@ void AppManagerJob::reloadAppInfos()
         }
     }
 
-    loadInstalledAppInfosFromFile(m_appInfosMap, "/var/lib/dpkg/status");
+    loadAllPkgInstalledAppInfos();
 
     Q_EMIT loadAppInfosFinished();
 }
@@ -395,6 +404,48 @@ void AppManagerJob::installProcInfoPlugin()
     Q_EMIT installProcInfoPluginFinished(successed);
 }
 
+void AppManagerJob::onPkgInstalled(const QString &pkgName)
+{
+    PkgInfo pkgInfo;
+    if (getInstalledPkgInfo(pkgInfo, pkgName)) {
+        loadPkgInstalledAppInfo(pkgInfo);
+        Q_EMIT appInstalled(m_appInfosMap.value(pkgName));
+        qInfo() << Q_FUNC_INFO << pkgName;
+    }
+}
+
+void AppManagerJob::onPkgUpdated(const QString &pkgName)
+{
+    PkgInfo pkgInfo;
+    if (getInstalledPkgInfo(pkgInfo, pkgName)) {
+        loadPkgInstalledAppInfo(pkgInfo);
+        Q_EMIT appInstalled(m_appInfosMap.value(pkgName));
+        qInfo() << Q_FUNC_INFO << pkgName;
+    }
+}
+
+void AppManagerJob::onPkgUninstalled(const QString &pkgName)
+{
+    m_mutex.lock(); // m_appInfosMap为成员变量，加锁
+    AppInfo *appInfo = &m_appInfosMap[pkgName];
+    appInfo->isInstalled = false;
+    appInfo->installedPkgInfo = {};
+    appInfo->desktopInfo = {};
+    m_mutex.unlock(); // 解锁
+
+    PkgInfo pkgInfo;
+    pkgInfo.pkgName = pkgName;
+    Q_EMIT appUninstalled(*appInfo);
+    qInfo() << Q_FUNC_INFO << pkgName;
+}
+
+void AppManagerJob::initConnection()
+{
+    connect(m_pkgMonitor, &PkgMonitor::pkgInstalled, this, &AppManagerJob::onPkgInstalled);
+    connect(m_pkgMonitor, &PkgMonitor::pkgUpdated, this, &AppManagerJob::onPkgUpdated);
+    connect(m_pkgMonitor, &PkgMonitor::pkgUninstalled, this, &AppManagerJob::onPkgUninstalled);
+}
+
 QList<QString> AppManagerJob::readSourceUrlList(const QString &filePath)
 {
     QList<QString> sourceUrlList;
@@ -476,13 +527,12 @@ bool AppManagerJob::getPkgInfoListFromFile(QList<PkgInfo> &pkgInfoList, const QS
     }
 
     PkgInfo pkgInfo;
-    QTextStream txtStrem(&pkgInfosFile);
-    qint64 lastPkgContentOffset = 0;
-    qint64 contentOffset = 0;
+    bool isInstalled = false;
     bool isReadingDescription = false;
-
     // 是否获取简洁信息
     if (isCompact) {
+        qint64 lastPkgContentOffset = 0;
+        qint64 contentOffset = 0;
         while (!pkgInfosFile.atEnd()) {
             const QByteArray ba = pkgInfosFile.readLine();
             contentOffset += ba.size();
@@ -493,6 +543,11 @@ bool AppManagerJob::getPkgInfoListFromFile(QList<PkgInfo> &pkgInfoList, const QS
                 continue;
             }
 
+            if (lineText.startsWith("Status: ")) {
+                isInstalled = lineText.split(": ").last().startsWith("install");
+                continue;
+            }
+
             // 检测到下一包信息
             if (lineText.isEmpty()) {
                 pkgInfo.infosFilePath = pkgInfosFilePath;
@@ -500,18 +555,24 @@ bool AppManagerJob::getPkgInfoListFromFile(QList<PkgInfo> &pkgInfoList, const QS
                 pkgInfo.contentOffset = contentOffset;
                 pkgInfo.contentSize = contentOffset - lastPkgContentOffset;
                 lastPkgContentOffset = contentOffset;
-                pkgInfoList.append(pkgInfo);
+                if (isInstalled) {
+                    pkgInfoList.append(pkgInfo);
+                }
                 pkgInfo = {};
             }
         }
     } else {
         while (!pkgInfosFile.atEnd()) {
             const QByteArray ba = pkgInfosFile.readLine();
-            contentOffset += ba.size();
 
             QString lineText = QString::fromUtf8(ba).remove("\n");
             if (lineText.startsWith("Package: ")) {
                 pkgInfo.pkgName = lineText.split(": ").last();
+                continue;
+            }
+
+            if (lineText.startsWith("Status: ")) {
+                isInstalled = lineText.split(": ").last().startsWith("install");
                 continue;
             }
 
@@ -570,18 +631,125 @@ bool AppManagerJob::getPkgInfoListFromFile(QList<PkgInfo> &pkgInfoList, const QS
             if (lineText.isEmpty()) {
                 pkgInfo.infosFilePath = pkgInfosFilePath;
                 pkgInfo.depositoryUrl = depositoryUrlStr;
-                pkgInfo.contentOffset = contentOffset;
-                pkgInfo.contentSize = contentOffset - lastPkgContentOffset;
-                lastPkgContentOffset = contentOffset;
-                pkgInfoList.append(pkgInfo);
+                if (isInstalled) {
+                    pkgInfoList.append(pkgInfo);
+                }
                 pkgInfo = {};
             }
         }
     }
     pkgInfosFile.close();
 
+    // 判断循环中最后一个包信息是否没添加到列表
+    // 防止最后一个包信息的最后一行不是换行符，而忽略了该包信息
+    if (!pkgInfo.pkgName.isEmpty()) {
+        if (isInstalled) {
+            pkgInfoList.append(pkgInfo);
+        }
+    }
+
     qInfo() << Q_FUNC_INFO << "end";
     return true;
+}
+
+bool AppManagerJob::getInstalledPkgInfo(PkgInfo &pkgInfo, const QString &pkgName)
+{
+    const QString &localPkgInfosFilePath = "/var/lib/dpkg/status";
+    QFile file(localPkgInfosFilePath);
+    if (!file.open(QIODevice::OpenModeFlag::ReadOnly)) {
+        qDebug() << Q_FUNC_INFO << "open" << file.fileName() << "failed!";
+        return false;
+    }
+
+    bool isInstalled = false;
+    bool isReadingDescription = false;
+    while (!file.atEnd()) {
+        const QByteArray ba = file.readLine();
+        QString lineText = QString::fromUtf8(ba).remove("\n");
+
+        // 不分析与目标包无关的信息
+        if (!pkgInfo.pkgName.isEmpty() && pkgName != pkgInfo.pkgName) {
+            if (lineText.isEmpty()) {
+                pkgInfo.pkgName.clear();
+            }
+            continue;
+        }
+
+        if (lineText.startsWith("Package: ")) {
+            pkgInfo.pkgName = lineText.split(": ").last();
+            continue;
+        }
+
+        if (lineText.startsWith("Status: ")) {
+            isInstalled = lineText.split(": ").last().startsWith("install");
+            continue;
+        }
+
+        if (lineText.startsWith("Installed-Size: ")) {
+            pkgInfo.installedSize = lineText.split(": ").last().toInt();
+            continue;
+        }
+        if (lineText.startsWith("Maintainer: ")) {
+            pkgInfo.maintainer = lineText.split(": ").last();
+            continue;
+        }
+        if (lineText.startsWith("Architecture: ")) {
+            pkgInfo.arch = lineText.split(": ").last();
+            continue;
+        }
+        if (lineText.startsWith("Version: ")) {
+            pkgInfo.version = lineText.split(": ").last();
+            continue;
+        }
+        if (lineText.startsWith("Depends: ")) {
+            pkgInfo.depends = lineText.split(": ").last();
+            continue;
+        }
+        if (lineText.startsWith("Filename: ")) {
+            const QString downloadFileName = lineText.split(": ").last();
+            pkgInfo.downloadUrl = QString("%1/%2").arg(pkgInfo.depositoryUrl).arg(downloadFileName);
+            continue;
+        }
+        if (lineText.startsWith("Size: ")) {
+            pkgInfo.pkgSize = lineText.split(": ").last().toInt();
+            continue;
+        }
+
+        if (lineText.startsWith("Homepage: ")) {
+            pkgInfo.homepage = lineText.split(": ").last();
+            continue;
+        }
+
+        if (lineText.startsWith("Description: ")) {
+            pkgInfo.description = lineText.split(": ").last();
+            pkgInfo.description.append("\n");
+            isReadingDescription = true;
+            continue;
+        }
+        if (lineText.startsWith(" ") && isReadingDescription) {
+            pkgInfo.description += lineText;
+            continue;
+        }
+        if (lineText.startsWith("Build-Depends: ")) {
+            isReadingDescription = false;
+            continue;
+        }
+
+        // 检测到下一包信息
+        if (lineText.isEmpty()) {
+            pkgInfo.infosFilePath = localPkgInfosFilePath;
+            if (pkgName == pkgInfo.pkgName) {
+                if (isInstalled) {
+                    break;
+                }
+            }
+            pkgInfo = {};
+        }
+    }
+    file.close();
+
+    // 判断循环中得到的最后一个包信息是否目标包信息
+    return (pkgName == pkgInfo.pkgName);
 }
 
 // 从包信息列表中加载应用信息列表
@@ -599,27 +767,34 @@ void AppManagerJob::loadSrvAppInfosFromFile(QMap<QString, AppInfo> &appInfosMap,
     }
 }
 
+void AppManagerJob::loadPkgInstalledAppInfo(const AM::PkgInfo &pkgInfo)
+{
+    m_mutex.lock(); // m_appInfosMap为成员变量，加锁
+    AppInfo *appInfo = &m_appInfosMap[pkgInfo.pkgName];
+    if (appInfo->pkgName.isEmpty()) {
+        appInfo->pkgName = pkgInfo.pkgName;
+    }
+    appInfo->isInstalled = true;
+    appInfo->installedPkgInfo = pkgInfo;
+
+    // 获取安装文件路径列表
+    appInfo->installedPkgInfo.installedFileList = getAppInstalledFileList(appInfo->installedPkgInfo.pkgName);
+    // 获取desktop
+    appInfo->desktopInfo.desktopPath = getAppDesktopPath(appInfo->installedPkgInfo.installedFileList,
+                                                         appInfo->installedPkgInfo.pkgName);
+    appInfo->desktopInfo = getDesktopInfo(appInfo->desktopInfo.desktopPath);
+
+    m_mutex.unlock(); // 解锁
+}
+
 // 从包信息列表中加载已安装应用信息列表
-void AppManagerJob::loadInstalledAppInfosFromFile(QMap<QString, AppInfo> &appInfosMap, const QString &pkgInfosFilePath)
+void AppManagerJob::loadAllPkgInstalledAppInfos()
 {
     QList<PkgInfo> pkgInfoList;
-    getPkgInfoListFromFile(pkgInfoList, pkgInfosFilePath);
+    getPkgInfoListFromFile(pkgInfoList, "/var/lib/dpkg/status");
 
     for (const PkgInfo &pkgInfo : pkgInfoList) {
-        m_mutex.lock(); // appInfosMap为成员变量，加锁
-        AppInfo *appInfo = &appInfosMap[pkgInfo.pkgName];
-        appInfo->pkgName = pkgInfo.pkgName;
-        appInfo->isInstalled = true;
-        appInfo->installedPkgInfo = pkgInfo;
-
-        // 获取安装文件路径列表
-        appInfo->installedPkgInfo.installedFileList = getAppInstalledFileList(appInfo->installedPkgInfo.pkgName);
-        // 获取desktop
-        appInfo->desktopInfo.desktopPath = getAppDesktopPath(appInfo->installedPkgInfo.installedFileList,
-                                                             appInfo->installedPkgInfo.pkgName);
-        appInfo->desktopInfo = getDesktopInfo(appInfo->desktopInfo.desktopPath);
-
-        m_mutex.unlock(); // 解锁
+        loadPkgInstalledAppInfo(pkgInfo);
     }
 }
 
@@ -773,6 +948,8 @@ QStandardItemModel *AppManagerJob::getItemModelFromAppInfoList(const QList<AppIn
         } else {
             item->setIcon(QIcon::fromTheme(APP_THEME_ICON_DEFAULT));
         }
+
+        item->setData(info.pkgName, AM_LIST_VIEW_ITEM_DATA_ROLE_PKG_NAME);
         model->appendRow(QList<QStandardItem *> {item});
     }
 

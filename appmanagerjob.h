@@ -1,6 +1,7 @@
 #pragma once
 
 #include "appmanagercommon.h"
+#include "pkgmonitor.h"
 
 #include <QObject>
 #include <QMap>
@@ -54,6 +55,12 @@ public Q_SLOTS:
     void installOhMyDDE();
     void installProcInfoPlugin();
 
+private Q_SLOTS:
+    // 包安装变动
+    void onPkgInstalled(const QString &pkgName);
+    void onPkgUpdated(const QString &pkgName);
+    void onPkgUninstalled(const QString &pkgName);
+
 Q_SIGNALS:
     void loadAppInfosFinished();
     void downloadPkgFinished(const QString &pkgName);
@@ -70,17 +77,26 @@ Q_SIGNALS:
     void buildPkgTaskFinished(bool successed, const AM::AppInfo &info);
     void installOhMyDDEFinished(bool successed);
     void installProcInfoPluginFinished(bool successed);
+    // 软件安装变动
+    void appInstalled(const AM::AppInfo &appInfo);
+    void appUpdated(const AM::AppInfo &appInfo);
+    void appUninstalled(const AM::AppInfo &appInfo);
 
 private:
+    void initConnection();
     QList<QString> readSourceUrlList(const QString &filePath);
     void reloadSourceUrlList();
     // 从包信息列表文件中获取包信息列表
     bool getPkgInfoListFromFile(QList<AM::PkgInfo> &pkgInfoList, const QString &pkgInfosFilePath, bool isCompact = false);
+    // 从本地包信息列表文件中获取某个包信息
+    bool getInstalledPkgInfo(AM::PkgInfo &pkgInfo, const QString &pkgName);
 
     // 从包信息列表中加载仓库应用信息列表
     void loadSrvAppInfosFromFile(QMap<QString, AM::AppInfo> &appInfosMap, const QString &pkgInfosFilePath);
+    // 加载包的已安装软件信息
+    void loadPkgInstalledAppInfo(const AM::PkgInfo &pkgInfo);
     // 从包信息列表中加载已安装应用信息列表
-    void loadInstalledAppInfosFromFile(QMap<QString, AM::AppInfo> &appInfosMap, const QString &pkgInfosFilePath);
+    void loadAllPkgInstalledAppInfos();
 
     QStringList getAppInstalledFileList(const QString &pkgName);
     QString getAppDesktopPath(const QStringList &list, const QString &pkgName);
@@ -115,4 +131,6 @@ private:
     QString m_pkgBuildCacheDirPath;
     // deb构建目录
     QString m_pkgBuildDirPath;
+    // 包监视器
+    PkgMonitor *m_pkgMonitor;
 };

@@ -6,6 +6,9 @@
 #define X_DEEPIN_VENDOR_STR "deepin"
 #define APP_THEME_ICON_DEFAULT "application-x-executable"
 
+// 列表数据角色定义
+#define AM_LIST_VIEW_ITEM_DATA_ROLE_PKG_NAME Qt::ItemDataRole::UserRole + 1
+
 namespace AM {
 struct PkgInfo {
     QString infosFilePath; // 包信息文件路径
@@ -54,6 +57,10 @@ struct AppInfo {
     AppInfo()
     {
         isInstalled = false;
+    }
+
+    bool operator== (const AppInfo &info) {
+        return this->pkgName == info.pkgName;
     }
 };
 

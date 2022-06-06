@@ -280,6 +280,11 @@ void AppManagerModel::initConnection()
     connect(this, &AppManagerModel::notifyThreadInstallProcInfoPlugin, m_appManagerJob, &AppManagerJob::installProcInfoPlugin);
     // 安装proc-info-plugin完成
     connect(m_appManagerJob, &AppManagerJob::installProcInfoPluginFinished, this, &AppManagerModel::installProcInfoPluginFinished);
+
+    // 包安装变动
+    connect(m_appManagerJob, &AppManagerJob::appInstalled, this, &AppManagerModel::appInstalled);
+    connect(m_appManagerJob, &AppManagerJob::appUpdated, this, &AppManagerModel::appUpdated);
+    connect(m_appManagerJob, &AppManagerJob::appUninstalled, this, &AppManagerModel::appUninstalled);
 }
 
 void AppManagerModel::postInit()

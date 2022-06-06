@@ -14,7 +14,6 @@
 #include <QPushButton>
 #include <QLineEdit>
 #include <QHBoxLayout>
-#include <QStandardItem>
 #include <QTextEdit>
 #include <QFile>
 #include <QSettings>
@@ -40,6 +39,7 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
     , m_showInstalledAppAction(nullptr)
     , m_showGuiAppAction(nullptr)
     , m_showSearchedAppAction(nullptr)
+    , m_displayRangeType(DisplayRangeType::All)
     , m_appListModel(nullptr)
     , m_appListView(nullptr)
     , m_appCountLabel(nullptr)
@@ -373,6 +373,11 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
     connect(m_model, &AppManagerModel::searchTaskFinished, this, &AppManagerWidget::onSearchTaskFinished);
     connect(m_model, &AppManagerModel::createListViewModeFinished, this, &AppManagerWidget::onCreateListViewModeFinished);
 
+    // 包安装变动
+    connect(m_model, &AppManagerModel::appInstalled, this, &AppManagerWidget::onAppInstalled);
+    connect(m_model, &AppManagerModel::appUpdated, this, &AppManagerWidget::onAppUpdated);
+    connect(m_model, &AppManagerModel::appUninstalled, this, &AppManagerWidget::onAppUninstalled);
+
     setLoading(true);
 }
 
@@ -469,14 +474,206 @@ void AppManagerWidget::onCreateListViewModeFinished()
     }
 
     // 更新应用个数标签
-    QString showingTypeStr;
-    for (QAction *action : m_filterMenu->actions()) {
-        if (action->isChecked()) {
-            showingTypeStr = action->text();
+    updateAppCountLabel();
+}
+
+void AppManagerWidget::onAppInstalled(const AM::AppInfo &appInfo)
+{
+    for (QList<AppInfo>::iterator iter = m_appInfoList.begin();
+         iter != m_appInfoList.end(); ++iter) {
+        if (appInfo.pkgName == iter->pkgName) {
+            *iter = appInfo;
             break;
         }
     }
-    m_appCountLabel->setText(QString("%1：共%2个").arg(showingTypeStr).arg(m_showingInfoList.size()));
+
+    switch (m_displayRangeType) {
+    case All:
+    case Searched: {
+        for (QList<AppInfo>::iterator iter = m_showingInfoList.begin();
+             iter != m_showingInfoList.end(); ++iter) {
+            if (appInfo.pkgName == iter->pkgName) {
+                *iter = appInfo;
+                break;
+            }
+        }
+
+        // 更新界面数据
+        for (int i = 0; i < m_appListModel->rowCount(); ++i) {
+            QStandardItem *item = m_appListModel->item(i, 0);
+            if (appInfo.pkgName == item->data(AM_LIST_VIEW_ITEM_DATA_ROLE_PKG_NAME).toString()) {
+                updateItemFromAppInfo(item, appInfo);
+                break;
+            }
+        }
+        break;
+    }
+    case Installed: {
+        m_showingInfoList.insert(0, appInfo);
+        m_appListModel->insertRow(0, createViewItemList(appInfo));
+        break;
+    }
+    case Gui: {
+        // 有desktop文件
+        if (!appInfo.desktopInfo.desktopPath.isEmpty()) {
+            m_showingInfoList.insert(0, appInfo);
+            m_appListModel->insertRow(0, createViewItemList(appInfo));
+        }
+        break;
+    }
+    }
+
+    // 刷新右侧显示内容
+    if (appInfo.pkgName == m_showingAppInfo.pkgName) {
+        showAppInfo(appInfo);
+    }
+    // 更新应用个数标签
+    updateAppCountLabel();
+}
+
+void AppManagerWidget::onAppUpdated(const AM::AppInfo &appInfo)
+{
+    for (QList<AppInfo>::iterator iter = m_appInfoList.begin();
+         iter != m_appInfoList.end(); ++iter) {
+        if (appInfo.pkgName == iter->pkgName) {
+            *iter = appInfo;
+            break;
+        }
+    }
+
+    switch (m_displayRangeType) {
+    case All:
+    case Searched:
+    case Installed: {
+        for (QList<AppInfo>::iterator iter = m_showingInfoList.begin();
+             iter != m_showingInfoList.end(); ++iter) {
+            if (appInfo.pkgName == iter->pkgName) {
+                *iter = appInfo;
+                break;
+            }
+        }
+
+        // 更新界面数据
+        for (int i = 0; i < m_appListModel->rowCount(); ++i) {
+            QStandardItem *item = m_appListModel->item(i, 0);
+            if (appInfo.pkgName == item->data(AM_LIST_VIEW_ITEM_DATA_ROLE_PKG_NAME).toString()) {
+                updateItemFromAppInfo(item, appInfo);
+                break;
+            }
+        }
+        break;
+    }
+    case Gui: {
+        int operateType = 0; // 0 - add, 1 - remove, 2 - update
+        for (QList<AppInfo>::iterator iter = m_showingInfoList.end() - 1;
+             iter != m_showingInfoList.begin() - 1; --iter) {
+            if (appInfo.pkgName != iter->pkgName) {
+                continue;
+            }
+
+            if (appInfo.desktopInfo.desktopPath.isEmpty()) {
+                operateType = 1;
+                m_showingInfoList.removeOne(*iter);
+            } else {
+                operateType = 2;
+                *iter = appInfo;
+            }
+            break;
+        }
+
+        // 根据操作类型，更新界面和缓存列表
+        if (0 == operateType) {
+            m_appInfoList.insert(0, appInfo);
+            m_appListModel->insertRow(0, createViewItemList(appInfo));
+        } else if (1 == operateType) {
+            for (int i = m_appListModel->rowCount() - 1; i >= 0 ; --i) {
+                QStandardItem *item = m_appListModel->item(i, 0);
+                if (appInfo.pkgName == item->data(AM_LIST_VIEW_ITEM_DATA_ROLE_PKG_NAME).toString()) {
+                    m_appListModel->removeRow(i);
+                    break;
+                }
+            }
+        } else if (2 == operateType) {
+            for (int i = m_appListModel->rowCount() - 1; i >= 0 ; --i) {
+                QStandardItem *item = m_appListModel->item(i, 0);
+                if (appInfo.pkgName == item->data(AM_LIST_VIEW_ITEM_DATA_ROLE_PKG_NAME).toString()) {
+                    updateItemFromAppInfo(item, appInfo);
+                    break;
+                }
+            }
+        }
+        break;
+    }
+    }
+
+    // 刷新右侧显示内容
+    if (appInfo.pkgName == m_showingAppInfo.pkgName) {
+        showAppInfo(appInfo);
+    }
+    // 更新应用个数标签
+    updateAppCountLabel();
+}
+
+void AppManagerWidget::onAppUninstalled(const AM::AppInfo &appInfo)
+{
+    for (QList<AppInfo>::iterator iter = m_appInfoList.begin();
+         iter != m_appInfoList.end(); ++iter) {
+        if (appInfo.pkgName == iter->pkgName) {
+            *iter = appInfo;
+            break;
+        }
+    }
+
+    switch (m_displayRangeType) {
+    case All:
+    case Searched: {
+        for (QList<AppInfo>::iterator iter = m_showingInfoList.begin();
+             iter != m_showingInfoList.end(); ++iter) {
+            if (appInfo.pkgName == iter->pkgName) {
+                *iter = appInfo;
+                break;
+            }
+        }
+
+        // 更新界面数据
+        for (int i = 0; i < m_appListModel->rowCount(); ++i) {
+            QStandardItem *item = m_appListModel->item(i, 0);
+            if (appInfo.pkgName == item->data(AM_LIST_VIEW_ITEM_DATA_ROLE_PKG_NAME).toString()) {
+                updateItemFromAppInfo(item, appInfo);
+                break;
+            }
+        }
+        break;
+    }
+    case Installed:
+    case Gui: {
+        for (QList<AppInfo>::iterator iter = m_showingInfoList.end() - 1;
+             iter != m_showingInfoList.begin() - 1; --iter) {
+            if (appInfo.pkgName == iter->pkgName) {
+                m_showingInfoList.removeOne(*iter);
+                break;
+            }
+        }
+        // 更新界面数据
+        for (int i = m_appListModel->rowCount() - 1; i >= 0 ; --i) {
+            QStandardItem *item = m_appListModel->item(i, 0);
+            if (appInfo.pkgName == item->data(AM_LIST_VIEW_ITEM_DATA_ROLE_PKG_NAME).toString()) {
+                m_appListModel->removeRow(i);
+                break;
+            }
+        }
+        break;
+    }
+    }
+
+    // 刷新右侧显示内容
+    if (appInfo.pkgName == m_showingAppInfo.pkgName) {
+        // 删除后，显示列表当前选中应用
+        AppInfo currentAppInfo = m_showingInfoList.at(m_appListView->currentIndex().row());
+        showAppInfo(currentAppInfo);
+    }
+    // 更新应用个数标签
+    updateAppCountLabel();
 }
 
 QString AppManagerWidget::formateAppInfo(const AppInfo &info)
@@ -520,11 +717,13 @@ QString AppManagerWidget::formateAppInfo(const AppInfo &info)
 
 void AppManagerWidget::showAllAppInfoList()
 {
+    m_displayRangeType = All;
     Q_EMIT m_model->notifyThreadCreateListViewMode(m_appInfoList);
 }
 
 void AppManagerWidget::onlyShowInstalledAppInfoList()
 {
+    m_displayRangeType = Installed;
     QList<AM::AppInfo> installedAppInfoList;
     for (const AppInfo &info : m_appInfoList) {
         if (!info.isInstalled) {
@@ -538,6 +737,7 @@ void AppManagerWidget::onlyShowInstalledAppInfoList()
 
 void AppManagerWidget::onlyShowUIAppInfoList()
 {
+    m_displayRangeType = Gui;
     QList<AM::AppInfo> uiAppInfoList;
     for (const AppInfo &info : m_appInfoList) {
         if (info.desktopInfo.desktopPath.isEmpty()) {
@@ -551,6 +751,7 @@ void AppManagerWidget::onlyShowUIAppInfoList()
 
 void AppManagerWidget::showSearchedAppInfoList()
 {
+    m_displayRangeType = Searched;
     QList<AM::AppInfo> searchedList = m_model->getSearchedAppInfoList();
 
     Q_EMIT m_model->notifyThreadCreateListViewMode(searchedList);
@@ -567,4 +768,44 @@ void AppManagerWidget::setLoading(bool loading)
         m_waitingSpinner->stop();
         m_contentWidget->show();
     }
+}
+
+QList<QStandardItem *> AppManagerWidget::createViewItemList(const AM::AppInfo &appInfo)
+{
+    // 更新列表显示数据
+    QStandardItem *item = new QStandardItem();
+    updateItemFromAppInfo(item, appInfo);
+    QList<QStandardItem *> itemList;
+    itemList << item;
+    return itemList;
+}
+
+void AppManagerWidget::updateItemFromAppInfo(QStandardItem *item, const AppInfo &appInfo)
+{
+    QString appName = appInfo.desktopInfo.appName;
+    if (appName.isEmpty()) {
+        appName = appInfo.pkgName;
+    }
+    item->setText(appName);
+
+    if (!appInfo.desktopInfo.themeIconName.isEmpty()) {
+        item->setIcon(QIcon::fromTheme(appInfo.desktopInfo.themeIconName));
+    } else {
+        item->setIcon(QIcon::fromTheme(APP_THEME_ICON_DEFAULT));
+    }
+
+    item->setData(appInfo.pkgName, AM_LIST_VIEW_ITEM_DATA_ROLE_PKG_NAME);
+}
+
+// 更新应用个数标签
+void AppManagerWidget::updateAppCountLabel()
+{
+    QString showingTypeStr;
+    for (QAction *action : m_filterMenu->actions()) {
+        if (action->isChecked()) {
+            showingTypeStr = action->text();
+            break;
+        }
+    }
+    m_appCountLabel->setText(QString("%1：共%2个").arg(showingTypeStr).arg(m_showingInfoList.size()));
 }

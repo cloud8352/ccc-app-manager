@@ -66,6 +66,10 @@ Q_SIGNALS:
     void notifyThreadInstallProcInfoPlugin();
     // 安装proc-info-plugin完成
     void installProcInfoPluginFinished(bool successed);
+    // 软件安装变动
+    void appInstalled(const AM::AppInfo &appInfo);
+    void appUpdated(const AM::AppInfo &appInfo);
+    void appUninstalled(const AM::AppInfo &appInfo);
 
 private:
     void initData();
