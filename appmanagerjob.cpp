@@ -527,7 +527,6 @@ bool AppManagerJob::getPkgInfoListFromFile(QList<PkgInfo> &pkgInfoList, const QS
     }
 
     PkgInfo pkgInfo;
-    bool isInstalled = false;
     bool isReadingDescription = false;
     // 是否获取简洁信息
     if (isCompact) {
@@ -544,7 +543,7 @@ bool AppManagerJob::getPkgInfoListFromFile(QList<PkgInfo> &pkgInfoList, const QS
             }
 
             if (lineText.startsWith("Status: ")) {
-                isInstalled = lineText.split(": ").last().startsWith("install");
+                pkgInfo.isInstalled = lineText.split(": ").last().startsWith("install");
                 continue;
             }
 
@@ -555,9 +554,7 @@ bool AppManagerJob::getPkgInfoListFromFile(QList<PkgInfo> &pkgInfoList, const QS
                 pkgInfo.contentOffset = contentOffset;
                 pkgInfo.contentSize = contentOffset - lastPkgContentOffset;
                 lastPkgContentOffset = contentOffset;
-                if (isInstalled) {
-                    pkgInfoList.append(pkgInfo);
-                }
+                pkgInfoList.append(pkgInfo);
                 pkgInfo = {};
             }
         }
@@ -572,7 +569,7 @@ bool AppManagerJob::getPkgInfoListFromFile(QList<PkgInfo> &pkgInfoList, const QS
             }
 
             if (lineText.startsWith("Status: ")) {
-                isInstalled = lineText.split(": ").last().startsWith("install");
+                pkgInfo.isInstalled = lineText.split(": ").last().startsWith("install");
                 continue;
             }
 
@@ -631,9 +628,7 @@ bool AppManagerJob::getPkgInfoListFromFile(QList<PkgInfo> &pkgInfoList, const QS
             if (lineText.isEmpty()) {
                 pkgInfo.infosFilePath = pkgInfosFilePath;
                 pkgInfo.depositoryUrl = depositoryUrlStr;
-                if (isInstalled) {
-                    pkgInfoList.append(pkgInfo);
-                }
+                pkgInfoList.append(pkgInfo);
                 pkgInfo = {};
             }
         }
@@ -643,9 +638,7 @@ bool AppManagerJob::getPkgInfoListFromFile(QList<PkgInfo> &pkgInfoList, const QS
     // 判断循环中最后一个包信息是否没添加到列表
     // 防止最后一个包信息的最后一行不是换行符，而忽略了该包信息
     if (!pkgInfo.pkgName.isEmpty()) {
-        if (isInstalled) {
-            pkgInfoList.append(pkgInfo);
-        }
+        pkgInfoList.append(pkgInfo);
     }
 
     qInfo() << Q_FUNC_INFO << "end";
@@ -661,7 +654,6 @@ bool AppManagerJob::getInstalledPkgInfo(PkgInfo &pkgInfo, const QString &pkgName
         return false;
     }
 
-    bool isInstalled = false;
     bool isReadingDescription = false;
     while (!file.atEnd()) {
         const QByteArray ba = file.readLine();
@@ -681,7 +673,7 @@ bool AppManagerJob::getInstalledPkgInfo(PkgInfo &pkgInfo, const QString &pkgName
         }
 
         if (lineText.startsWith("Status: ")) {
-            isInstalled = lineText.split(": ").last().startsWith("install");
+            pkgInfo.isInstalled = lineText.split(": ").last().startsWith("install");
             continue;
         }
 
@@ -739,7 +731,7 @@ bool AppManagerJob::getInstalledPkgInfo(PkgInfo &pkgInfo, const QString &pkgName
         if (lineText.isEmpty()) {
             pkgInfo.infosFilePath = localPkgInfosFilePath;
             if (pkgName == pkgInfo.pkgName) {
-                if (isInstalled) {
+                if (pkgInfo.isInstalled) {
                     break;
                 }
             }
@@ -794,6 +786,9 @@ void AppManagerJob::loadAllPkgInstalledAppInfos()
     getPkgInfoListFromFile(pkgInfoList, "/var/lib/dpkg/status");
 
     for (const PkgInfo &pkgInfo : pkgInfoList) {
+        if (!pkgInfo.isInstalled) {
+            continue;
+        }
         loadPkgInstalledAppInfo(pkgInfo);
     }
 }

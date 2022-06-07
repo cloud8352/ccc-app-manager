@@ -16,6 +16,7 @@ struct PkgInfo {
     qint64 contentSize; // 内容大小
     QString depositoryUrl; // 仓库地址
     QString pkgName;
+    bool isInstalled;
     int installedSize;
     QString updatedTime;
     QString maintainer;
@@ -32,6 +33,7 @@ struct PkgInfo {
         contentOffset = 0;
         contentSize = 0;
         installedSize = 0;
+        isInstalled = false;
         pkgSize = 0;
     }
 };
