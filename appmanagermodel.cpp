@@ -29,6 +29,11 @@ AppManagerModel::~AppManagerModel()
     m_appManagerJob = nullptr;
 }
 
+RunningStatus AppManagerModel::getRunningStatus()
+{
+    return m_appManagerJob->getRunningStatus();
+}
+
 QList<AM::AppInfo> AppManagerModel::getAppInfosList()
 {
     return m_appManagerJob->getAppInfosMap().values();
@@ -105,12 +110,8 @@ void AppManagerModel::openStoreAppDetailPage(const QString &pkgName)
 
 void AppManagerModel::openSpkStoreAppDetailPage(const QString &pkgName)
 {
-    QProcess spkopen;
-    QString cmd = QString("notify-send shenmo \"\因为无法获取分类信息，暂时没有实现这个功能\"\ ");
-    spkopen.start(cmd);
-    spkopen.waitForStarted();
-    spkopen.waitForFinished();
-
+    Q_UNUSED(pkgName);
+    popupNormalSysNotify("shenmo", "因为无法获取分类信息，暂时没有实现这个功能");
 }
 
 QString AppManagerModel::getDownloadDirPath() const
@@ -220,11 +221,34 @@ AppInfo AppManagerModel::getAppInfo(const QString &pkgName)
     return m_appManagerJob->getAppInfosMap().value(pkgName);
 }
 
+void AppManagerModel::onAppInstalled(const AppInfo &appInfo)
+{
+    popupNormalSysNotify("ccc-app-manager", QString("软件包 %1 已安装").arg(appInfo.pkgName));
+
+    Q_EMIT appInstalled(appInfo);
+}
+
+void AppManagerModel::onAppUpdated(const AppInfo &appInfo)
+{
+    popupNormalSysNotify("ccc-app-manager", QString("软件包 %1 已更新").arg(appInfo.pkgName));
+
+    Q_EMIT appUpdated(appInfo);
+}
+
+void AppManagerModel::onAppUninstalled(const AppInfo &appInfo)
+{
+    popupNormalSysNotify("ccc-app-manager", QString("软件包 %1 已卸载").arg(appInfo.pkgName));
+
+    Q_EMIT appUninstalled(appInfo);
+}
+
 void AppManagerModel::initData()
 {
     // 注册结构体
     qRegisterMetaType<AM::AppInfo>("AM::AppInfo");
     qRegisterMetaType<QList<AM::AppInfo>>("QList<AM::AppInfo>");
+    qRegisterMetaType<AM::RunningStatus>("AM::RunningStatus");
+    qRegisterMetaType<RunningStatus>("RunningStatus");
 
     // 线程
     m_appManagerJobThread = new QThread;
@@ -235,6 +259,8 @@ void AppManagerModel::initData()
 void AppManagerModel::initConnection()
 {
     // 线程信号连接
+    connect(m_appManagerJob, &AppManagerJob::runningStatusChanged, this, &AppManagerModel::runningStatusChanged);
+
     connect(m_appManagerJobThread, &QThread::started, m_appManagerJob, &AppManagerJob::init);
     connect(this, &AppManagerModel::notifyThreadreloadAppInfos, m_appManagerJob, &AppManagerJob::reloadAppInfos);
     connect(this, &AppManagerModel::notifyThreadDownloadFile, m_appManagerJob, &AppManagerJob::downloadFile);
@@ -260,11 +286,6 @@ void AppManagerModel::initConnection()
 
     connect(this, &AppManagerModel::notifyThreadUninstallPkg, m_appManagerJob, &AppManagerJob::uninstallPkg);
     connect(m_appManagerJob, &AppManagerJob::uninstallPkgFinished, this, [](const QString &pkgName) {
-        QProcess uninstnotify;
-        QString cmd = QString("notify-send ccc-app-manager \" 软件包 ")+ pkgName + QString(" 已卸载\" ");
-        uninstnotify.start(cmd);
-        uninstnotify.waitForStarted();
-        uninstnotify.waitForFinished();
         qInfo() << pkgName << "uninstalled";
     });
 
@@ -282,9 +303,9 @@ void AppManagerModel::initConnection()
     connect(m_appManagerJob, &AppManagerJob::installProcInfoPluginFinished, this, &AppManagerModel::installProcInfoPluginFinished);
 
     // 包安装变动
-    connect(m_appManagerJob, &AppManagerJob::appInstalled, this, &AppManagerModel::appInstalled);
-    connect(m_appManagerJob, &AppManagerJob::appUpdated, this, &AppManagerModel::appUpdated);
-    connect(m_appManagerJob, &AppManagerJob::appUninstalled, this, &AppManagerModel::appUninstalled);
+    connect(m_appManagerJob, &AppManagerJob::appInstalled, this, &AppManagerModel::onAppInstalled);
+    connect(m_appManagerJob, &AppManagerJob::appUpdated, this, &AppManagerModel::onAppUpdated);
+    connect(m_appManagerJob, &AppManagerJob::appUninstalled, this, &AppManagerModel::onAppUninstalled);
 }
 
 void AppManagerModel::postInit()

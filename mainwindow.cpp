@@ -1,5 +1,4 @@
 #include "mainwindow.h"
-#include "appmanagerwidget.h"
 
 #include <DTitlebar>
 #include <DFrame>
@@ -17,6 +16,8 @@ MainWindow::MainWindow(QWidget *parent)
     : DMainWindow(parent)
     , m_centralWidgetBlurBg(nullptr)
     , m_isDeepin(false)
+    , m_appManagerModel(nullptr)
+    , m_appManagerWidget(nullptr)
 {
     setMinimumSize(500, 300);
     resize(1000, 600);
@@ -68,15 +69,20 @@ MainWindow::MainWindow(QWidget *parent)
     centralWidget->setLayout(mainLayout);
 
     // 应用管理
-    AppManagerModel *appManagerModel = new AppManagerModel(this);
-    AppManagerWidget *appManagerWidget = new AppManagerWidget(appManagerModel, this);
-    mainLayout->addWidget(appManagerWidget);
+    m_appManagerModel = new AppManagerModel(this);
+    m_appManagerWidget = new AppManagerWidget(m_appManagerModel, this);
+    mainLayout->addWidget(m_appManagerWidget);
 
     // init connection
-    connect(watchGuiAppListAction, &QAction::triggered, this, [this, appManagerModel](bool checked) {
+    // 运行状态改变
+    connect(m_appManagerModel, &AppManagerModel::runningStatusChanged, this, [this](RunningStatus) {
+        this->updateUIByRunningStatus();
+    });
+
+    connect(watchGuiAppListAction, &QAction::triggered, this, [this](bool checked) {
         Q_UNUSED(checked);
         QString uiAppPkgNameList;
-        for (const AM::AppInfo &info : appManagerModel->getAppInfosList()) {
+        for (const AM::AppInfo &info : m_appManagerModel->getAppInfosList()) {
             if (info.desktopInfo.desktopPath.isEmpty()) {
                 continue;
             }
@@ -100,10 +106,10 @@ MainWindow::MainWindow(QWidget *parent)
         dlg->exec();
         dlg->deleteLater();
     });
-    connect(openOhMyDDEAction, &QAction::triggered, this, [appManagerModel](bool checked) {
+    connect(openOhMyDDEAction, &QAction::triggered, this, [this](bool checked) {
         Q_UNUSED(checked);
-        if (appManagerModel->isPkgInstalled(OH_MY_DDE_PKG_NAME)) {
-            QProcess::startDetached("dex", {appManagerModel->getAppInfo(OH_MY_DDE_PKG_NAME).desktopInfo.desktopPath});
+        if (m_appManagerModel->isPkgInstalled(OH_MY_DDE_PKG_NAME)) {
+            QProcess::startDetached("dex", {m_appManagerModel->getAppInfo(OH_MY_DDE_PKG_NAME).desktopInfo.desktopPath});
         } else {
             // 安装
             DDialog dlg;
@@ -112,15 +118,15 @@ MainWindow::MainWindow(QWidget *parent)
             dlg.addButton("否", false, DDialog::ButtonType::ButtonNormal);
             int ret = dlg.exec();
             if (0 == ret) {
-                Q_EMIT appManagerModel->notifyThreadInstallOhMyDDE();
+                Q_EMIT m_appManagerModel->notifyThreadInstallOhMyDDE();
             }
         }
     });
 
-    connect(openProInfoWindowAction, &QAction::triggered, this, [appManagerModel](bool checked) {
+    connect(openProInfoWindowAction, &QAction::triggered, this, [this](bool checked) {
         Q_UNUSED(checked);
-        if (appManagerModel->isPkgInstalled(PROC_INFO_PLUGIN_PKG_NAME)) {
-            QProcess::startDetached("dex", {appManagerModel->getAppInfo(PROC_INFO_PLUGIN_PKG_NAME).desktopInfo.desktopPath});
+        if (m_appManagerModel->isPkgInstalled(PROC_INFO_PLUGIN_PKG_NAME)) {
+            QProcess::startDetached("dex", {m_appManagerModel->getAppInfo(PROC_INFO_PLUGIN_PKG_NAME).desktopInfo.desktopPath});
         } else {
             // 安装
             DDialog dlg;
@@ -129,7 +135,7 @@ MainWindow::MainWindow(QWidget *parent)
             dlg.addButton("否", false, DDialog::ButtonType::ButtonNormal);
             int ret = dlg.exec();
             if (0 == ret) {
-                Q_EMIT appManagerModel->notifyThreadInstallProcInfoPlugin();
+                Q_EMIT m_appManagerModel->notifyThreadInstallProcInfoPlugin();
             }
         }
     });
@@ -144,6 +150,8 @@ MainWindow::MainWindow(QWidget *parent)
         m_centralWidgetBlurBg->setVisible(false);
         titlebar()->setBackgroundTransparent(false);
     }
+
+    updateUIByRunningStatus();
 }
 
 MainWindow::~MainWindow()
@@ -160,4 +168,11 @@ void MainWindow::closeEvent(QCloseEvent *event)
 {
     DMainWindow::closeEvent(event);
     qApp->exit();
+}
+
+void MainWindow::updateUIByRunningStatus()
+{
+    bool enable = (RunningStatus::Normal == m_appManagerModel->getRunningStatus());
+    titlebar()->menu()->setEnabled(enable);
+    m_appManagerWidget->setEnabled(enable);
 }

@@ -14,8 +14,6 @@
 #include <zlib.h>
 #include <aio.h> // async I/O
 
-using namespace AM;
-
 int zlibCompress(char *dest, int &destLen,
                  char *source, int sourceLen)
 {
@@ -91,6 +89,7 @@ ComPressError zlibUnCompress(const char *srcName, const char *destName)
 
 AppManagerJob::AppManagerJob(QObject *parent)
     : QObject(parent)
+    , m_runningStatus(Normal)
     , m_isInitiallized(false)
     , m_downloadingFile(nullptr)
     , m_netManager(nullptr)
@@ -105,6 +104,16 @@ AppManagerJob::AppManagerJob(QObject *parent)
 
 AppManagerJob::~AppManagerJob()
 {
+}
+
+RunningStatus AppManagerJob::getRunningStatus()
+{
+    RunningStatus status;
+    m_mutex.lock();
+    status = m_runningStatus;
+    m_mutex.unlock();
+
+    return status;
 }
 
 QMap<QString, AppInfo> AppManagerJob::getAppInfosMap()
@@ -394,14 +403,18 @@ void AppManagerJob::uninstallPkg(const QString &pkgName)
 
 void AppManagerJob::installOhMyDDE()
 {
+    setRunningStatus(Busy);
     bool successed = installLocalPkg(OH_MY_DDE_LOCAL_PKG_PATH);
     Q_EMIT installOhMyDDEFinished(successed);
+    setRunningStatus(Normal);
 }
 
 void AppManagerJob::installProcInfoPlugin()
 {
+    setRunningStatus(Busy);
     bool successed = installLocalPkg(PROC_INFO_PLUGIN_LOCAL_PKG_PATH);
     Q_EMIT installProcInfoPluginFinished(successed);
+    setRunningStatus(Normal);
 }
 
 void AppManagerJob::onPkgInstalled(const QString &pkgName)
@@ -444,6 +457,14 @@ void AppManagerJob::initConnection()
     connect(m_pkgMonitor, &PkgMonitor::pkgInstalled, this, &AppManagerJob::onPkgInstalled);
     connect(m_pkgMonitor, &PkgMonitor::pkgUpdated, this, &AppManagerJob::onPkgUpdated);
     connect(m_pkgMonitor, &PkgMonitor::pkgUninstalled, this, &AppManagerJob::onPkgUninstalled);
+}
+
+void AppManagerJob::setRunningStatus(RunningStatus status)
+{
+    if (m_runningStatus != status) {
+        m_runningStatus = status;
+        Q_EMIT runningStatusChanged(m_runningStatus);
+    }
 }
 
 QList<QString> AppManagerJob::readSourceUrlList(const QString &filePath)

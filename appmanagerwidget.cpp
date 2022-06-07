@@ -378,6 +378,7 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
     connect(m_model, &AppManagerModel::appUpdated, this, &AppManagerWidget::onAppUpdated);
     connect(m_model, &AppManagerModel::appUninstalled, this, &AppManagerWidget::onAppUninstalled);
 
+    // post init
     setLoading(true);
 }
 

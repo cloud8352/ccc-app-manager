@@ -20,12 +20,16 @@ QT_END_NAMESPACE
 #define OH_MY_DDE_LOCAL_PKG_PATH "/opt/apps/com.github.ccc-app-manager/files/pkg/top.yzzi.youjian_1.0.3_amd64.deb"
 #define PROC_INFO_PLUGIN_LOCAL_PKG_PATH "/opt/apps/com.github.ccc-app-manager/files/pkg/com.github.proc-info-plugin_0.0.1_amd64.deb"
 
+using namespace AM;
+
 class AppManagerJob : public QObject
 {
     Q_OBJECT
 public:
     explicit AppManagerJob(QObject *parent = nullptr);
     virtual ~AppManagerJob() override;
+
+    RunningStatus getRunningStatus();
 
     QMap<QString, AM::AppInfo> getAppInfosMap();
 
@@ -62,6 +66,7 @@ private Q_SLOTS:
     void onPkgUninstalled(const QString &pkgName);
 
 Q_SIGNALS:
+    void runningStatusChanged(RunningStatus status);
     void loadAppInfosFinished();
     void downloadPkgFinished(const QString &pkgName);
     void fileDownloadProgressChanged(const QString &url, qint64 bytesRead, qint64 totalBytes);
@@ -84,6 +89,8 @@ Q_SIGNALS:
 
 private:
     void initConnection();
+    void setRunningStatus(RunningStatus status);
+
     QList<QString> readSourceUrlList(const QString &filePath);
     void reloadSourceUrlList();
     // 从包信息列表文件中获取包信息列表
@@ -113,6 +120,7 @@ private:
 
 private:
     QMutex m_mutex;
+    RunningStatus m_runningStatus;
     QList<QString> m_sourceUrlList;
     QMap<QString, AM::AppInfo> m_appInfosMap;
 

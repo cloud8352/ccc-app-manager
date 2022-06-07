@@ -4,12 +4,19 @@
 
 #define ONLY_SHOW_IN_VALUE_DEEPIN "Deepin"
 #define X_DEEPIN_VENDOR_STR "deepin"
+// 应用默认图标
 #define APP_THEME_ICON_DEFAULT "application-x-executable"
 
 // 列表数据角色定义
 #define AM_LIST_VIEW_ITEM_DATA_ROLE_PKG_NAME Qt::ItemDataRole::UserRole + 1
 
 namespace AM {
+// 运行状态
+enum RunningStatus {
+    Normal = 0,
+    Busy
+};
+
 struct PkgInfo {
     QString infosFilePath; // 包信息文件路径
     qint64 contentOffset; // 内容在包信息文件中的地址偏移
@@ -77,4 +84,6 @@ struct PinyinInfo {
 bool isChineseChar(const QChar &character);
 // 字符串转拼音
 PinyinInfo getPinYinInfoFromStr(const QString &words);
+
+void popupNormalSysNotify(const QString &summary, const QString &body);
 } // namespace AM

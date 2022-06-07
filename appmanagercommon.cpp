@@ -45,3 +45,9 @@ AM::PinyinInfo AM::getPinYinInfoFromStr(const QString &words)
 
     return result;
 }
+
+void AM::popupNormalSysNotify(const QString &summary, const QString &body)
+{
+    QProcess proc;
+    proc.startDetached("notify-send", {"-a", "com.github.ccc-app-manager", summary, body});
+}

@@ -1,4 +1,5 @@
 #pragma once
+#include "appmanagerwidget.h"
 
 #include <DMainWindow>
 
@@ -21,7 +22,13 @@ protected:
     virtual void closeEvent(QCloseEvent *event) override;
 
 private:
+    void updateUIByRunningStatus();
+
+private:
     DBlurEffectWidget *m_barBlurBg;
     DBlurEffectWidget *m_centralWidgetBlurBg;
     bool m_isDeepin;
+    // 应用管理
+    AppManagerModel *m_appManagerModel;
+    AppManagerWidget *m_appManagerWidget;
 };

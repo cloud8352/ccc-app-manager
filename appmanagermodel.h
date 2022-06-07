@@ -18,6 +18,8 @@ public:
     explicit AppManagerModel(QObject *parent = nullptr);
     virtual ~AppManagerModel() override;
 
+    RunningStatus getRunningStatus();
+
     QList<AM::AppInfo> getAppInfosList();
     QString formatePkgInfo(const AM::PkgInfo &info);
 
@@ -40,6 +42,8 @@ public:
     AM::AppInfo getAppInfo(const QString &pkgName);
 
 Q_SIGNALS:
+    void runningStatusChanged(RunningStatus status);
+
     void notifyThreadreloadAppInfos();
     void loadAppInfosFinished();
     void notifyThreadDownloadFile(const QString &url);
@@ -70,6 +74,12 @@ Q_SIGNALS:
     void appInstalled(const AM::AppInfo &appInfo);
     void appUpdated(const AM::AppInfo &appInfo);
     void appUninstalled(const AM::AppInfo &appInfo);
+
+private Q_SLOTS:
+    // 软件安装变动
+    void onAppInstalled(const AM::AppInfo &appInfo);
+    void onAppUpdated(const AM::AppInfo &appInfo);
+    void onAppUninstalled(const AM::AppInfo &appInfo);
 
 private:
     void initData();
