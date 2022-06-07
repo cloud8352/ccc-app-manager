@@ -551,7 +551,7 @@ bool AppManagerJob::getPkgInfoListFromFile(QList<PkgInfo> &pkgInfoList, const QS
             if (lineText.isEmpty()) {
                 pkgInfo.infosFilePath = pkgInfosFilePath;
                 pkgInfo.depositoryUrl = depositoryUrlStr;
-                pkgInfo.contentOffset = contentOffset;
+                pkgInfo.contentOffset = lastPkgContentOffset;
                 pkgInfo.contentSize = contentOffset - lastPkgContentOffset;
                 lastPkgContentOffset = contentOffset;
                 pkgInfoList.append(pkgInfo);
@@ -753,8 +753,9 @@ void AppManagerJob::loadSrvAppInfosFromFile(QMap<QString, AppInfo> &appInfosMap,
 
     for (const PkgInfo &pkgInfo : pkgInfoList) {
         m_mutex.lock(); // appInfosMap为成员变量，加锁
-        appInfosMap[pkgInfo.pkgName].pkgName = pkgInfo.pkgName;
-        appInfosMap[pkgInfo.pkgName].pkgInfoList.append(pkgInfo);
+        AppInfo *appInfo = &appInfosMap[pkgInfo.pkgName];
+        appInfo->pkgName = pkgInfo.pkgName;
+        appInfo->pkgInfoList.append(pkgInfo);
         m_mutex.unlock(); // 解锁
     }
 }
