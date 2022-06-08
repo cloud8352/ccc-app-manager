@@ -1,6 +1,6 @@
 #pragma once
 
-#include <QObject>
+#include <DStyleOption>
 
 #define ONLY_SHOW_IN_VALUE_DEEPIN "Deepin"
 #define X_DEEPIN_VENDOR_STR "deepin"
@@ -8,7 +8,7 @@
 #define APP_THEME_ICON_DEFAULT "application-x-executable"
 
 // 列表数据角色定义
-#define AM_LIST_VIEW_ITEM_DATA_ROLE_PKG_NAME Qt::ItemDataRole::UserRole + 1
+#define AM_LIST_VIEW_ITEM_DATA_ROLE_PKG_NAME Dtk::ItemDataRole::UserRole + 1
 
 namespace AM {
 // 运行状态

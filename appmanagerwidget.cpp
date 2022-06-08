@@ -28,6 +28,10 @@
 
 using namespace AM;
 
+Q_DECLARE_METATYPE(QMargins)
+const QMargins ListViewItemMargin(5, 3, 5, 3);
+const QVariant ListViewItemMarginVar = QVariant::fromValue(ListViewItemMargin);
+
 AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
     : QWidget(parent)
     , m_model(model)
@@ -125,6 +129,8 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
     m_appListView = new DListView(this);
     m_appListView->setSpacing(0);
     m_appListView->setItemSpacing(1);
+    m_appListView->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    m_appListView->setFrameShape(QFrame::Shape::NoFrame);
     m_appListView->setTextElideMode(Qt::TextElideMode::ElideMiddle);
     m_appListView->setEditTriggers(DListView::EditTrigger::NoEditTriggers);
     m_appListView->setAutoFillBackground(true);
@@ -399,6 +405,7 @@ void AppManagerWidget::showAppInfo(const AppInfo &info)
         if (m_showingAppInfo.installedPkgInfo.version == srvPkgInfo.version) {
             m_showingAppInfo.installedPkgInfo.pkgSize = srvPkgInfo.pkgSize;
             m_showingAppInfo.installedPkgInfo.downloadUrl = srvPkgInfo.downloadUrl;
+            break;
         }
     }
 
@@ -408,7 +415,12 @@ void AppManagerWidget::showAppInfo(const AppInfo &info)
     } else {
         m_appAbstractLabel->setPixmap(QIcon::fromTheme(APP_THEME_ICON_DEFAULT).pixmap(40, 40));
     }
-    m_appNameLable->setText(m_showingAppInfo.desktopInfo.appName);
+
+    QString appName = m_showingAppInfo.desktopInfo.appName;
+    if (appName.isEmpty()) {
+        appName = m_showingAppInfo.pkgName;
+    }
+    m_appNameLable->setText(appName);
 
     m_infoBtn->setChecked(true);
 
@@ -713,6 +725,7 @@ void AppManagerWidget::setItemModelFromAppInfoList(const QList<AppInfo> &appInfo
             appName = info.pkgName;
         }
         QStandardItem *item = new QStandardItem(appName);
+        item->setData(ListViewItemMarginVar, Dtk::ItemDataRole::MarginsRole);
         if (!info.desktopInfo.themeIconName.isEmpty()) {
             item->setIcon(QIcon::fromTheme(info.desktopInfo.themeIconName));
         } else {
