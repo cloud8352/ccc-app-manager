@@ -23,12 +23,7 @@ public:
     QList<AM::AppInfo> getAppInfosList();
     QString formatePkgInfo(const AM::PkgInfo &info);
 
-    void setShowingAppInfo(const AM::AppInfo &info);
-    AM::AppInfo getShowingAppInfo();
-
     QList<AM::AppInfo> getSearchedAppInfoList() const;
-    QStandardItemModel *getListViewModel();
-    QList<AM::AppInfo> getShowingAppInfoList() const;
 
     void openStoreAppDetailPage(const QString &pkgName);
     void openSpkStoreAppDetailPage(const QString &pkgName);
@@ -52,10 +47,6 @@ Q_SIGNALS:
     void notifyThreadStartSearchTask(const QString &text);
     // 搜索任务完成
     void searchTaskFinished();
-    // 通知创建列表数据模型
-    void notifyThreadCreateListViewMode(const QList<AM::AppInfo> &list);
-    // 创建列表数据模型完成
-    void createListViewModeFinished();
     // 通知卸载包
     void notifyThreadUninstallPkg(const QString &pkgName);
     // 通知构建安装包
@@ -87,8 +78,6 @@ private:
     void postInit();
 
 private:
-    AM::AppInfo m_showingAppInfo;
-
     AppManagerJob *m_appManagerJob;
     QThread *m_appManagerJobThread;
 };

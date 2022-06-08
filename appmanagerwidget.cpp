@@ -316,7 +316,7 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
 
     // 在线获取安装包
     connect(getPkgFromSrvBtn, &QPushButton::clicked, this, [this](bool) {
-        PkgDownloadDlg *dlg = new PkgDownloadDlg(m_model, this);
+        PkgDownloadDlg *dlg = new PkgDownloadDlg(m_showingAppInfo, m_model, this);
         dlg->show();
     });
 
@@ -371,7 +371,6 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
     });
 
     connect(m_model, &AppManagerModel::searchTaskFinished, this, &AppManagerWidget::onSearchTaskFinished);
-    connect(m_model, &AppManagerModel::createListViewModeFinished, this, &AppManagerWidget::onCreateListViewModeFinished);
 
     // 包安装变动
     connect(m_model, &AppManagerModel::appInstalled, this, &AppManagerWidget::onAppInstalled);
@@ -402,9 +401,6 @@ void AppManagerWidget::showAppInfo(const AppInfo &info)
             m_showingAppInfo.installedPkgInfo.downloadUrl = srvPkgInfo.downloadUrl;
         }
     }
-
-
-    m_model->setShowingAppInfo(m_showingAppInfo);
 
     const QString themeIconName = m_showingAppInfo.desktopInfo.themeIconName;
     if (!themeIconName.isEmpty()) {
@@ -455,27 +451,6 @@ void AppManagerWidget::onSearchTaskFinished()
 {
     // 显示搜索的应用
     Q_EMIT m_filterMenu->triggered(m_showSearchedAppAction);
-}
-
-void AppManagerWidget::onCreateListViewModeFinished()
-{
-    QStandardItemModel *model = m_model->getListViewModel();
-    m_appListView->setModel(model);
-
-    if (nullptr != m_appListModel) {
-        m_appListModel->deleteLater();
-        m_appListModel = model;
-    }
-
-    m_showingInfoList = m_model->getShowingAppInfoList();
-
-    if (!m_showingInfoList.isEmpty()) {
-        m_appListView->setCurrentIndex(m_appListModel->index(0, 0));
-        showAppInfo(m_showingInfoList[0]);
-    }
-
-    // 更新应用个数标签
-    updateAppCountLabel();
 }
 
 void AppManagerWidget::onAppInstalled(const AM::AppInfo &appInfo)
@@ -716,10 +691,43 @@ QString AppManagerWidget::formateAppInfo(const AppInfo &info)
     return text;
 }
 
+void AppManagerWidget::setItemModelFromAppInfoList(const QList<AppInfo> &appInfoList)
+{
+    // 更新正在显示的应用列表
+    m_showingInfoList = appInfoList;
+
+    if (!m_showingInfoList.isEmpty()) {
+        m_appListView->setCurrentIndex(m_appListModel->index(0, 0));
+        showAppInfo(m_showingInfoList[0]);
+    }
+
+    // 更新应用个数标签
+    updateAppCountLabel();
+
+    // 先清空数据
+    m_appListModel->removeRows(0, m_appListModel->rowCount());
+
+    for (const AppInfo &info : appInfoList) {
+        QString appName = info.desktopInfo.appName;
+        if (appName.isEmpty()) {
+            appName = info.pkgName;
+        }
+        QStandardItem *item = new QStandardItem(appName);
+        if (!info.desktopInfo.themeIconName.isEmpty()) {
+            item->setIcon(QIcon::fromTheme(info.desktopInfo.themeIconName));
+        } else {
+            item->setIcon(QIcon::fromTheme(APP_THEME_ICON_DEFAULT));
+        }
+
+        item->setData(info.pkgName, AM_LIST_VIEW_ITEM_DATA_ROLE_PKG_NAME);
+        m_appListModel->appendRow(QList<QStandardItem *> {item});
+    }
+}
+
 void AppManagerWidget::showAllAppInfoList()
 {
     m_displayRangeType = All;
-    Q_EMIT m_model->notifyThreadCreateListViewMode(m_appInfoList);
+    setItemModelFromAppInfoList(m_appInfoList);
 }
 
 void AppManagerWidget::onlyShowInstalledAppInfoList()
@@ -733,7 +741,7 @@ void AppManagerWidget::onlyShowInstalledAppInfoList()
         installedAppInfoList.append(info);
     }
 
-    Q_EMIT m_model->notifyThreadCreateListViewMode(installedAppInfoList);
+    setItemModelFromAppInfoList(installedAppInfoList);
 }
 
 void AppManagerWidget::onlyShowUIAppInfoList()
@@ -747,7 +755,7 @@ void AppManagerWidget::onlyShowUIAppInfoList()
         uiAppInfoList.append(info);
     }
 
-    Q_EMIT m_model->notifyThreadCreateListViewMode(uiAppInfoList);
+    setItemModelFromAppInfoList(uiAppInfoList);
 }
 
 void AppManagerWidget::showSearchedAppInfoList()
@@ -755,7 +763,7 @@ void AppManagerWidget::showSearchedAppInfoList()
     m_displayRangeType = Searched;
     QList<AM::AppInfo> searchedList = m_model->getSearchedAppInfoList();
 
-    Q_EMIT m_model->notifyThreadCreateListViewMode(searchedList);
+    setItemModelFromAppInfoList(searchedList);
 }
 
 void AppManagerWidget::setLoading(bool loading)

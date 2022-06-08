@@ -94,7 +94,6 @@ AppManagerJob::AppManagerJob(QObject *parent)
     , m_downloadingFile(nullptr)
     , m_netManager(nullptr)
     , m_netReply(nullptr)
-    , m_listViewModel(nullptr)
     , m_pkgMonitor(nullptr)
 {
     m_downloadDirPath = QString("%1/Desktop/downloadedPkg").arg(QDir::homePath());
@@ -131,26 +130,6 @@ QList<AppInfo> AppManagerJob::getSearchedAppInfoList()
     QList<AppInfo> appInfoList;
     m_mutex.lock();
     appInfoList = m_searchedAppInfoList;
-    m_mutex.unlock();
-
-    return appInfoList;
-}
-
-QStandardItemModel *AppManagerJob::getListViewModel()
-{
-    QStandardItemModel *model = nullptr;
-    m_mutex.lock();
-    model = m_listViewModel;
-    m_mutex.unlock();
-
-    return model;
-}
-
-QList<AppInfo> AppManagerJob::getShowingAppInfoList()
-{
-    QList<AppInfo> appInfoList;
-    m_mutex.lock();
-    appInfoList = m_showingAppInfoList;
     m_mutex.unlock();
 
     return appInfoList;
@@ -361,17 +340,6 @@ void AppManagerJob::startSearchTask(const QString &text)
         m_mutex.unlock();
     }
     Q_EMIT searchTaskFinished();
-}
-
-void AppManagerJob::createListViewMode(const QList<AppInfo> &list)
-{
-    QStandardItemModel *model = getItemModelFromAppInfoList(list);
-
-    m_mutex.lock();
-    m_showingAppInfoList = list;
-    m_listViewModel = model;
-    m_mutex.unlock();
-    Q_EMIT createListViewModeFinished();
 }
 
 void AppManagerJob::uninstallPkg(const QString &pkgName)
@@ -949,28 +917,6 @@ qint64 AppManagerJob::getUrlFileSize(QString &url, int tryTimes)
         break;
     }
     return size;
-}
-
-QStandardItemModel *AppManagerJob::getItemModelFromAppInfoList(const QList<AppInfo> &appInfoList)
-{
-    QStandardItemModel *model = new QStandardItemModel(this);
-    for (const AppInfo &info : appInfoList) {
-        QString appName = info.desktopInfo.appName;
-        if (appName.isEmpty()) {
-            appName = info.pkgName;
-        }
-        QStandardItem *item = new QStandardItem(appName);
-        if (!info.desktopInfo.themeIconName.isEmpty()) {
-            item->setIcon(QIcon::fromTheme(info.desktopInfo.themeIconName));
-        } else {
-            item->setIcon(QIcon::fromTheme(APP_THEME_ICON_DEFAULT));
-        }
-
-        item->setData(info.pkgName, AM_LIST_VIEW_ITEM_DATA_ROLE_PKG_NAME);
-        model->appendRow(QList<QStandardItem *> {item});
-    }
-
-    return model;
 }
 
 bool AppManagerJob::buildPkg(const AppInfo &info)

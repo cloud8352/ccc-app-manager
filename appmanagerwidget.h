@@ -44,7 +44,6 @@ public Q_SLOTS:
     void showAppFileList(const AM::AppInfo &info);
     void onSearchEditingFinished();
     void onSearchTaskFinished();
-    void onCreateListViewModeFinished();
     // 软件安装变动
     void onAppInstalled(const AM::AppInfo &appInfo);
     void onAppUpdated(const AM::AppInfo &appInfo);
@@ -53,6 +52,8 @@ public Q_SLOTS:
 private:
     QString formateAppInfo(const AM::AppInfo &info);
 
+    // 根据应用信息列表设置标准单元数据对象数据
+    void setItemModelFromAppInfoList(const QList<AM::AppInfo> &appInfoList);
     void showAllAppInfoList();
     void onlyShowInstalledAppInfoList();
     void onlyShowUIAppInfoList();

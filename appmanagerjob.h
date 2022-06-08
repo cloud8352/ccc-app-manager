@@ -34,8 +34,6 @@ public:
     QMap<QString, AM::AppInfo> getAppInfosMap();
 
     QList<AM::AppInfo> getSearchedAppInfoList();
-    QStandardItemModel *getListViewModel();
-    QList<AM::AppInfo> getShowingAppInfoList();
     QString getDownloadDirPath() const;
     QString getPkgBuildDirPath() const;
 
@@ -52,8 +50,6 @@ public Q_SLOTS:
 
     // 开始搜索任务
     void startSearchTask(const QString &text);
-    // 创建列表数据模型
-    void createListViewMode(const QList<AM::AppInfo> &list);
 
     void uninstallPkg(const QString &pkgName);
     void installOhMyDDE();
@@ -74,8 +70,6 @@ Q_SIGNALS:
 
     // 搜索任务完成
     void searchTaskFinished();
-    // 创建列表数据模型完成
-    void createListViewModeFinished();
 
     void uninstallPkgFinished(const QString &pkgName);
     // 构建安装包任务完成
@@ -111,8 +105,6 @@ private:
 
     qint64 getUrlFileSize(QString &url, int tryTimes = 3);
 
-    // 由应用信息列表获得标准单元数据类
-    QStandardItemModel *getItemModelFromAppInfoList(const QList<AM::AppInfo> &appInfoList);
     // 构建安装包任务
     bool buildPkg(const AM::AppInfo &info);
     // 安全本地软件包
@@ -132,9 +124,6 @@ private:
     QString m_downloadingFileOriginUrl;
 
     QList<AM::AppInfo> m_searchedAppInfoList;
-    // 当前正在使用的列表数据模型
-    QStandardItemModel *m_listViewModel;
-    QList<AM::AppInfo> m_showingAppInfoList;
     // deb构建缓存目录
     QString m_pkgBuildCacheDirPath;
     // deb构建目录

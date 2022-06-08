@@ -18,10 +18,10 @@
 
 using namespace AM;
 
-PkgDownloadDlg::PkgDownloadDlg(AppManagerModel *model, QWidget *parent)
+PkgDownloadDlg::PkgDownloadDlg(const AM::AppInfo &appInfo, AppManagerModel *model, QWidget *parent)
     : DFrame(parent)
     , m_model(model)
-    , m_showingAppInfo(m_model->getShowingAppInfo())
+    , m_showingAppInfo(appInfo)
     , m_centralWidgetBlurBg(nullptr)
     , m_titlebar(nullptr)
     , m_versionSelectMenu(nullptr)
@@ -51,7 +51,7 @@ PkgDownloadDlg::PkgDownloadDlg(AppManagerModel *model, QWidget *parent)
     setLayout(mainLayout);
 
     m_titlebar = new DTitlebar(this);
-    m_titlebar->setIcon(QIcon::fromTheme("chromium-app-list"));
+    m_titlebar->setIcon(QIcon(":/icons/deepin/builtin/icons/grid_48px.svg"));
     m_titlebar->setTitle("应用管理器");
     m_titlebar->setFixedHeight(40);
     m_titlebar->setBackgroundTransparent(true);

@@ -23,7 +23,7 @@ class PkgDownloadDlg : public DFrame
 {
     Q_OBJECT
 public:
-    explicit PkgDownloadDlg(AppManagerModel *model, QWidget *parent = nullptr);
+    explicit PkgDownloadDlg(const AM::AppInfo &appInfo, AppManagerModel *model, QWidget *parent = nullptr);
     virtual ~PkgDownloadDlg() override;
 
 protected:

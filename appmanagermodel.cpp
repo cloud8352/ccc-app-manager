@@ -63,29 +63,9 @@ QString AppManagerModel::formatePkgInfo(const PkgInfo &info)
     return text;
 }
 
-void AppManagerModel::setShowingAppInfo(const AM::AppInfo &info)
-{
-    m_showingAppInfo = info;
-}
-
-AppInfo AppManagerModel::getShowingAppInfo()
-{
-    return m_showingAppInfo;
-}
-
 QList<AppInfo> AppManagerModel::getSearchedAppInfoList() const
 {
     return m_appManagerJob->getSearchedAppInfoList();
-}
-
-QStandardItemModel *AppManagerModel::getListViewModel()
-{
-    return m_appManagerJob->getListViewModel();
-}
-
-QList<AppInfo> AppManagerModel::getShowingAppInfoList() const
-{
-    return m_appManagerJob->getShowingAppInfoList();
 }
 
 void AppManagerModel::openStoreAppDetailPage(const QString &pkgName)
@@ -277,11 +257,6 @@ void AppManagerModel::initConnection()
     connect(this, &AppManagerModel::notifyThreadStartSearchTask, m_appManagerJob, &AppManagerJob::startSearchTask);
     connect(m_appManagerJob, &AppManagerJob::searchTaskFinished, this, [this]() {
         Q_EMIT this->searchTaskFinished();
-    });
-
-    connect(this, &AppManagerModel::notifyThreadCreateListViewMode, m_appManagerJob, &AppManagerJob::createListViewMode);
-    connect(m_appManagerJob, &AppManagerJob::createListViewModeFinished, this, [this]() {
-        Q_EMIT this->createListViewModeFinished();
     });
 
     connect(this, &AppManagerModel::notifyThreadUninstallPkg, m_appManagerJob, &AppManagerJob::uninstallPkg);
