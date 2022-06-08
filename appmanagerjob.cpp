@@ -400,7 +400,7 @@ void AppManagerJob::onPkgUpdated(const QString &pkgName)
     PkgInfo pkgInfo;
     if (getInstalledPkgInfo(pkgInfo, pkgName)) {
         loadPkgInstalledAppInfo(pkgInfo);
-        Q_EMIT appInstalled(m_appInfosMap.value(pkgName));
+        Q_EMIT appUpdated(m_appInfosMap.value(pkgName));
         qInfo() << Q_FUNC_INFO << pkgName;
     }
 }
