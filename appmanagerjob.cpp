@@ -203,31 +203,33 @@ void AppManagerJob::downloadPkg(const QString &pkgName)
     Q_EMIT downloadPkgFinished(pkgName);
 }
 
+void AppManagerJob::downloadPkgFile(const PkgInfo &info)
+{
+    m_downloadingPkgInfo = info;
+    downloadFile(info.downloadUrl);
+}
+
 void AppManagerJob::downloadFile(const QString &url)
 {
     if (!m_isInitiallized) {
         init();
     }
 
-    m_downloadingFileOriginUrl = url;
     QString realUrl = url;
     // 获取文件大小
     qint64 fileSize = getUrlFileSize(realUrl);
     qInfo() << Q_FUNC_INFO << fileSize;
+    if (0 > fileSize) {
+        Q_EMIT pkgFileDownloadFailed(m_downloadingPkgInfo);
+        return;
+    }
     qint64 endOffset = fileSize;
 
     // 创建下载路径
-    QFileInfo info(realUrl);
-    QString fileName = info.fileName();
-
-    if (!fileName.contains(".")) {
-        QFileInfo originUrlInfo(url);
-        fileName = originUrlInfo.fileName();
-    }
-
-    if (fileName.isEmpty()) {
-        fileName = "index.html";
-    }
+    QString fileName = QString("%1_%2_%3.deb")
+            .arg(m_downloadingPkgInfo.pkgName)
+            .arg(m_downloadingPkgInfo.version)
+            .arg(m_downloadingPkgInfo.arch);
 
     QDir downloadDir(m_downloadDirPath);
     if (!downloadDir.exists()) {
@@ -270,7 +272,7 @@ void AppManagerJob::onHttpReadyRead()
 
 void AppManagerJob::onDownloadProgressChanged(qint64 bytesRead, qint64 totalBytes)
 {
-    Q_EMIT fileDownloadProgressChanged(m_downloadingFileOriginUrl, bytesRead, totalBytes);
+    Q_EMIT pkgFileDownloadProgressChanged(m_downloadingPkgInfo, bytesRead, totalBytes);
 }
 
 void AppManagerJob::onFileDownloadFinished()
@@ -284,7 +286,7 @@ void AppManagerJob::onFileDownloadFinished()
     m_downloadingFile->deleteLater();
     m_downloadingFile = nullptr;
 
-    Q_EMIT fileDownloadFinished(m_downloadingFileOriginUrl);
+    Q_EMIT pkgFileDownloadFinished(m_downloadingPkgInfo);
 }
 
 void AppManagerJob::startBuildPkgTask(const AppInfo &info)

@@ -139,6 +139,20 @@ MainWindow::MainWindow(QWidget *parent)
             }
         }
     });
+    // 下载失败
+    connect(m_appManagerModel, &AppManagerModel::pkgFileDownloadFailed, this, [this](const PkgInfo &info) {
+        qInfo() << Q_FUNC_INFO << info.downloadUrl << "download failed!";
+        DDialog *dlg = new DDialog(this);
+        QString tip = QString("下载失败，请尝试在终端使用apt download %1命令下载").arg(info.pkgName);
+        dlg->setMessage("下载失败，请尝试在终端使用以下命令下载");
+        QTextEdit *cmdEdit = new QTextEdit(this);
+        cmdEdit->setText(QString("apt download %1").arg(info.pkgName));
+        cmdEdit->setReadOnly(true);
+        dlg->addContent(cmdEdit);
+
+        dlg->exec();
+        dlg->deleteLater();
+    });
 
     // post init
     if (m_isDeepin) {

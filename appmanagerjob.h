@@ -41,6 +41,7 @@ public Q_SLOTS:
     void init();
     void reloadAppInfos();
     void downloadPkg(const QString &pkgName);
+    void downloadPkgFile(const PkgInfo &info);
     void downloadFile(const QString &url);
     void onHttpReadyRead();
     void onDownloadProgressChanged(qint64, qint64);
@@ -65,8 +66,9 @@ Q_SIGNALS:
     void runningStatusChanged(RunningStatus status);
     void loadAppInfosFinished();
     void downloadPkgFinished(const QString &pkgName);
-    void fileDownloadProgressChanged(const QString &url, qint64 bytesRead, qint64 totalBytes);
-    void fileDownloadFinished(const QString &url);
+    void pkgFileDownloadProgressChanged(const PkgInfo &info, qint64 bytesRead, qint64 totalBytes);
+    void pkgFileDownloadFinished(const PkgInfo &info);
+    void pkgFileDownloadFailed(const PkgInfo &info);
 
     // 搜索任务完成
     void searchTaskFinished();
@@ -121,7 +123,7 @@ private:
     QFile *m_downloadingFile;
     QNetworkAccessManager *m_netManager;
     QNetworkReply *m_netReply;
-    QString m_downloadingFileOriginUrl;
+    PkgInfo m_downloadingPkgInfo;
 
     QList<AM::AppInfo> m_searchedAppInfoList;
     // deb构建缓存目录

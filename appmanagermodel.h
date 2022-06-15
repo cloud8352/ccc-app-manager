@@ -41,9 +41,10 @@ Q_SIGNALS:
 
     void notifyThreadreloadAppInfos();
     void loadAppInfosFinished();
-    void notifyThreadDownloadFile(const QString &url);
-    void fileDownloadProgressChanged(const QString &url, qint64 bytesRead, qint64 totalBytes);
-    void fileDownloadFinished(const QString &url);
+    void notifyThreadDownloadPkgFile(const PkgInfo &info);
+    void pkgFileDownloadProgressChanged(const PkgInfo &info, qint64 bytesRead, qint64 totalBytes);
+    void pkgFileDownloadFinished(const PkgInfo &info);
+    void pkgFileDownloadFailed(const PkgInfo &info);
     void notifyThreadStartSearchTask(const QString &text);
     // 搜索任务完成
     void searchTaskFinished();

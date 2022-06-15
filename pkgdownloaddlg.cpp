@@ -208,9 +208,9 @@ void PkgDownloadDlg::onVerSelectMenuTrigered(QAction *trigeredAction)
     m_infoEdit->setText(infoText);
 }
 
-void PkgDownloadDlg::onFileDownloadProgressChanged(const QString &url, qint64 bytesRead, qint64 totalBytes)
+void PkgDownloadDlg::onFileDownloadProgressChanged(const AM::PkgInfo &info, qint64 bytesRead, qint64 totalBytes)
 {
-    if (m_selectedPkgInfo.downloadUrl != url) {
+    if (m_selectedPkgInfo.pkgName != info.pkgName) {
         return;
     }
 
@@ -224,7 +224,7 @@ void PkgDownloadDlg::initConnection()
 {
     connect(m_versionSelectMenu, &QMenu::triggered, this, &PkgDownloadDlg::onVerSelectMenuTrigered);
     connect(m_downloadBtn, &QPushButton::clicked, this, [this](bool) {
-        this->m_model->notifyThreadDownloadFile(m_selectedPkgInfo.downloadUrl);
+        this->m_model->notifyThreadDownloadPkgFile(m_selectedPkgInfo);
         this->m_isDownloading = true;
         this->updateUI();
     });
@@ -234,9 +234,14 @@ void PkgDownloadDlg::initConnection()
         QDesktopServices::openUrl(m_model->getDownloadDirPath());
     });
 
-    connect(m_model, &AppManagerModel::fileDownloadProgressChanged, this, &PkgDownloadDlg::onFileDownloadProgressChanged);
-    connect(m_model, &AppManagerModel::fileDownloadFinished, this, [this](const QString &url) {
-        qInfo() << Q_FUNC_INFO << url << "downloaded";
+    connect(m_model, &AppManagerModel::pkgFileDownloadProgressChanged, this, &PkgDownloadDlg::onFileDownloadProgressChanged);
+    connect(m_model, &AppManagerModel::pkgFileDownloadFinished, this, [this](const AM::PkgInfo &info) {
+        qInfo() << Q_FUNC_INFO << info.downloadUrl << "downloaded";
+        this->m_isDownloading = false;
+        this->updateUI();
+    });
+    connect(m_model, &AppManagerModel::pkgFileDownloadFailed, this, [this](const AM::PkgInfo &info) {
+        qInfo() << Q_FUNC_INFO << info.downloadUrl << "download failed!";
         this->m_isDownloading = false;
         this->updateUI();
     });

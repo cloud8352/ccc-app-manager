@@ -32,7 +32,7 @@ protected:
 
 public Q_SLOTS:
     void onVerSelectMenuTrigered(QAction *action);
-    void onFileDownloadProgressChanged(const QString &url, qint64 bytesRead, qint64 totalBytes);
+    void onFileDownloadProgressChanged(const AM::PkgInfo &info, qint64 bytesRead, qint64 totalBytes);
 
 private:
     void initConnection();

@@ -229,6 +229,10 @@ void AppManagerModel::initData()
     qRegisterMetaType<QList<AM::AppInfo>>("QList<AM::AppInfo>");
     qRegisterMetaType<AM::RunningStatus>("AM::RunningStatus");
     qRegisterMetaType<RunningStatus>("RunningStatus");
+    qRegisterMetaType<PkgInfo>("PkgInfo");
+    qRegisterMetaType<AM::PkgInfo>("AM::PkgInfo");
+    qRegisterMetaType<QList<PkgInfo>>("QList<PkgInfo>");
+    qRegisterMetaType<QList<AM::PkgInfo>>("QList<AM::PkgInfo>");
 
     // 线程
     m_appManagerJobThread = new QThread;
@@ -243,13 +247,14 @@ void AppManagerModel::initConnection()
 
     connect(m_appManagerJobThread, &QThread::started, m_appManagerJob, &AppManagerJob::init);
     connect(this, &AppManagerModel::notifyThreadreloadAppInfos, m_appManagerJob, &AppManagerJob::reloadAppInfos);
-    connect(this, &AppManagerModel::notifyThreadDownloadFile, m_appManagerJob, &AppManagerJob::downloadFile);
-    connect(m_appManagerJob, &AppManagerJob::fileDownloadProgressChanged, this, [this](const QString &url, qint64 bytesRead, qint64 totalBytes) {
-        Q_EMIT this->fileDownloadProgressChanged(url, bytesRead, totalBytes);
+    connect(this, &AppManagerModel::notifyThreadDownloadPkgFile, m_appManagerJob, &AppManagerJob::downloadPkgFile);
+    connect(m_appManagerJob, &AppManagerJob::pkgFileDownloadProgressChanged, this, [this](const PkgInfo &info, qint64 bytesRead, qint64 totalBytes) {
+        Q_EMIT this->pkgFileDownloadProgressChanged(info, bytesRead, totalBytes);
     });
-    connect(m_appManagerJob, &AppManagerJob::fileDownloadFinished, this, [this](const QString &url) {
-        Q_EMIT this->fileDownloadFinished(url);
+    connect(m_appManagerJob, &AppManagerJob::pkgFileDownloadFinished, this, [this](const PkgInfo &info) {
+        Q_EMIT this->pkgFileDownloadFinished(info);
     });
+    connect(m_appManagerJob, &AppManagerJob::pkgFileDownloadFailed, this, &AppManagerModel::pkgFileDownloadFailed);
     connect(m_appManagerJob, &AppManagerJob::loadAppInfosFinished, this, [this] {
         Q_EMIT this->loadAppInfosFinished();
     });
