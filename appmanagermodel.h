@@ -35,6 +35,8 @@ public:
     bool isPkgInstalled(const QString &pkgName);
     // 获取应用信息
     AM::AppInfo getAppInfo(const QString &pkgName);
+    // 运行desktop执行命令
+    void startDetachedDesktopExec(const QString &exec);
 
 Q_SIGNALS:
     void runningStatusChanged(RunningStatus status);

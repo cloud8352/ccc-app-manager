@@ -201,6 +201,19 @@ AppInfo AppManagerModel::getAppInfo(const QString &pkgName)
     return m_appManagerJob->getAppInfosMap().value(pkgName);
 }
 
+void AppManagerModel::startDetachedDesktopExec(const QString &exec)
+{
+    QString execAdjusted = exec;
+    QStringList execList = exec.split(" ");
+    if (execList.last().startsWith("%")) {
+        execAdjusted = execAdjusted.remove(execList.last());
+    }
+
+    QProcess proc;
+    proc.startDetached("/usr/bin/bash", {"-c", execAdjusted});
+    proc.close();
+}
+
 void AppManagerModel::onAppInstalled(const AppInfo &appInfo)
 {
     popupNormalSysNotify("ccc-app-manager", QString("软件包 %1 已安装").arg(appInfo.pkgName));

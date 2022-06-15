@@ -293,9 +293,7 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
     });
 
     connect(openBtn, &QPushButton::clicked, this, [this](bool) {
-        QProcess proc;
-        proc.startDetached("dex", {m_showingAppInfo.desktopInfo.desktopPath});
-        proc.close();
+        m_model->startDetachedDesktopExec(m_showingAppInfo.desktopInfo.exec);
     });
 
     connect(m_infoSwitchBtn, &DButtonBox::buttonClicked, this, [this](QAbstractButton *btn) {

@@ -109,7 +109,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(openOhMyDDEAction, &QAction::triggered, this, [this](bool checked) {
         Q_UNUSED(checked);
         if (m_appManagerModel->isPkgInstalled(OH_MY_DDE_PKG_NAME)) {
-            QProcess::startDetached("dex", {m_appManagerModel->getAppInfo(OH_MY_DDE_PKG_NAME).desktopInfo.desktopPath});
+            m_appManagerModel->startDetachedDesktopExec(m_appManagerModel->getAppInfo(OH_MY_DDE_PKG_NAME).desktopInfo.exec);
         } else {
             // 安装
             DDialog dlg;
@@ -126,7 +126,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(openProInfoWindowAction, &QAction::triggered, this, [this](bool checked) {
         Q_UNUSED(checked);
         if (m_appManagerModel->isPkgInstalled(PROC_INFO_PLUGIN_PKG_NAME)) {
-            QProcess::startDetached("dex", {m_appManagerModel->getAppInfo(PROC_INFO_PLUGIN_PKG_NAME).desktopInfo.desktopPath});
+            m_appManagerModel->startDetachedDesktopExec(m_appManagerModel->getAppInfo(PROC_INFO_PLUGIN_PKG_NAME).desktopInfo.exec);
         } else {
             // 安装
             DDialog dlg;
