@@ -83,6 +83,9 @@ mv build/ccc-app-manager pkg/opt/apps/com.github.ccc-app-manager/files
 #cp translations/*.qm dabao/extract/opt/apps/top.yzzi.onecuter/files/translations/
 rm -rf build
 
+# 放置依赖的安装包
+cp ../pkg/* pkg/opt/apps/com.github.ccc-app-manager/files/pkg/
+
 #打包
 echo "构建软件包"
 mkdir -p pkg/DEBIAN
