@@ -534,7 +534,7 @@ bool AppManagerJob::getPkgInfoListFromFile(QList<PkgInfo> &pkgInfoList, const QS
             }
 
             if (lineText.startsWith("Status: ")) {
-                pkgInfo.isInstalled = lineText.split(": ").last().startsWith("install");
+                pkgInfo.isInstalled = lineText.contains("installed");
                 continue;
             }
 
@@ -560,7 +560,7 @@ bool AppManagerJob::getPkgInfoListFromFile(QList<PkgInfo> &pkgInfoList, const QS
             }
 
             if (lineText.startsWith("Status: ")) {
-                pkgInfo.isInstalled = lineText.split(": ").last().startsWith("install");
+                pkgInfo.isInstalled = lineText.contains("installed");
                 continue;
             }
 
@@ -664,7 +664,7 @@ bool AppManagerJob::getInstalledPkgInfo(PkgInfo &pkgInfo, const QString &pkgName
         }
 
         if (lineText.startsWith("Status: ")) {
-            pkgInfo.isInstalled = lineText.split(": ").last().startsWith("install");
+            pkgInfo.isInstalled = lineText.contains("installed");
             continue;
         }
 
