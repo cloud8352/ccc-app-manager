@@ -21,6 +21,10 @@ protected:
     virtual void resizeEvent(QResizeEvent *event) override;
     virtual void closeEvent(QCloseEvent *event) override;
 
+private Q_SLOTS:
+    // 安装包安装完成时
+    void onPkgInstallFinished(bool successed, const QString &err);
+
 private:
     void updateUIByRunningStatus();
 

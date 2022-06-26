@@ -374,16 +374,18 @@ void AppManagerJob::uninstallPkg(const QString &pkgName)
 void AppManagerJob::installOhMyDDE()
 {
     setRunningStatus(Busy);
-    bool successed = installLocalPkg(OH_MY_DDE_LOCAL_PKG_PATH);
-    Q_EMIT installOhMyDDEFinished(successed);
+    QString err;
+    bool successed = installLocalPkg(OH_MY_DDE_LOCAL_PKG_PATH, err);
+    Q_EMIT installOhMyDDEFinished(successed, err);
     setRunningStatus(Normal);
 }
 
 void AppManagerJob::installProcInfoPlugin()
 {
     setRunningStatus(Busy);
-    bool successed = installLocalPkg(PROC_INFO_PLUGIN_LOCAL_PKG_PATH);
-    Q_EMIT installProcInfoPluginFinished(successed);
+    QString err;
+    bool successed = installLocalPkg(PROC_INFO_PLUGIN_LOCAL_PKG_PATH, err);
+    Q_EMIT installProcInfoPluginFinished(successed, err);
     setRunningStatus(Normal);
 }
 
@@ -1107,7 +1109,7 @@ bool AppManagerJob::buildPkg(const AppInfo &info)
     return true;
 }
 
-bool AppManagerJob::installLocalPkg(const QString &path)
+bool AppManagerJob::installLocalPkg(const QString &path, QString &err)
 {
     QProcess *proc = new QProcess(this);
     proc->start("pkexec", {"dpkg", "-i", path});
@@ -1116,9 +1118,9 @@ bool AppManagerJob::installLocalPkg(const QString &path)
     proc->waitForFinished();
     proc->waitForReadyRead();
 
-    QString error = proc->readAllStandardError();
-    if (!error.isEmpty()) {
-        qInfo() << Q_FUNC_INFO << QString("install %1 failed! ").arg(path) << error;
+    err = proc->readAllStandardError();
+    if (!err.isEmpty()) {
+        qInfo() << Q_FUNC_INFO << QString("install %1 failed! ").arg(path) << err;
 
         proc->close();
         proc->deleteLater();

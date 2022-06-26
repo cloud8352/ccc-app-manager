@@ -114,10 +114,10 @@ MainWindow::MainWindow(QWidget *parent)
             // 安装
             DDialog dlg;
             dlg.setMessage("是否安装oh-my-dde?");
-            dlg.addButton("是", true, DDialog::ButtonType::ButtonRecommend);
             dlg.addButton("否", false, DDialog::ButtonType::ButtonNormal);
+            dlg.addButton("是", true, DDialog::ButtonType::ButtonRecommend);
             int ret = dlg.exec();
-            if (0 == ret) {
+            if (1 == ret) {
                 Q_EMIT m_appManagerModel->notifyThreadInstallOhMyDDE();
             }
         }
@@ -131,14 +131,20 @@ MainWindow::MainWindow(QWidget *parent)
             // 安装
             DDialog dlg;
             dlg.setMessage("是否安装dde进程信息插件?");
-            dlg.addButton("是", true, DDialog::ButtonType::ButtonRecommend);
             dlg.addButton("否", false, DDialog::ButtonType::ButtonNormal);
+            dlg.addButton("是", true, DDialog::ButtonType::ButtonRecommend);
             int ret = dlg.exec();
-            if (0 == ret) {
+            if (1 == ret) {
                 Q_EMIT m_appManagerModel->notifyThreadInstallProcInfoPlugin();
             }
         }
     });
+
+
+    // 安装完成时
+    connect(m_appManagerModel, &AppManagerModel::installOhMyDDEFinished, this, &MainWindow::onPkgInstallFinished);
+    connect(m_appManagerModel, &AppManagerModel::installProcInfoPluginFinished, this, &MainWindow::onPkgInstallFinished);
+
     // 下载失败
     connect(m_appManagerModel, &AppManagerModel::pkgFileDownloadFailed, this, [this](const PkgInfo &info) {
         qInfo() << Q_FUNC_INFO << info.downloadUrl << "download failed!";
@@ -182,6 +188,23 @@ void MainWindow::closeEvent(QCloseEvent *event)
 {
     DMainWindow::closeEvent(event);
     qApp->exit();
+}
+
+void MainWindow::onPkgInstallFinished(bool successed, const QString &err)
+{
+    qInfo() << Q_FUNC_INFO << successed << err;
+    if (successed) {
+        return;
+    }
+
+    DDialog *dlg = new DDialog(this);
+    QTextEdit *errEdit = new QTextEdit(this);
+    errEdit->setText(err);
+    errEdit->setReadOnly(true);
+    dlg->addContent(errEdit);
+
+    dlg->exec();
+    dlg->deleteLater();
 }
 
 void MainWindow::updateUIByRunningStatus()
