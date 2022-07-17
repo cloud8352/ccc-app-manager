@@ -116,6 +116,7 @@ private:
     QMutex m_mutex;
     RunningStatus m_runningStatus;
     QList<QString> m_sourceUrlList;
+    bool m_isOnlyLoadCurrentArchAppInfos;
     QMap<QString, AM::AppInfo> m_appInfosMap;
 
     bool m_isInitiallized;

@@ -91,6 +91,7 @@ ComPressError zlibUnCompress(const char *srcName, const char *destName)
 AppManagerJob::AppManagerJob(QObject *parent)
     : QObject(parent)
     , m_runningStatus(Normal)
+    , m_isOnlyLoadCurrentArchAppInfos(true)
     , m_isInitiallized(false)
     , m_downloadingFile(nullptr)
     , m_netManager(nullptr)
@@ -170,8 +171,20 @@ void AppManagerJob::reloadAppInfos()
 
     QDir aptPkgInfoListDir("/var/lib/apt/lists");
     const QStringList fileNameList = aptPkgInfoListDir.entryList(QDir::Filter::Files | QDir::Filter::NoDot | QDir::Filter::NoDotDot);
+    // 判断架构包信息文件名过滤信息
+    QString archPkgsFilterStr;
+    if (m_isOnlyLoadCurrentArchAppInfos) {
+        const QString &currentCpuArch = QSysInfo::currentCpuArchitecture();
+        archPkgsFilterStr = ("x86_64" == currentCpuArch) ?
+                    QString("%1_Packages").arg("amd64") :
+                    QString("%1_Packages").arg(currentCpuArch);
+    } else {
+        archPkgsFilterStr = "_Packages";
+    }
+
     for (const QString &fileName : fileNameList) {
-        if (fileName.endsWith("_Packages")) {
+        // 过滤出包信息文件路径
+        if (fileName.endsWith(archPkgsFilterStr)) {
             const QString filePath = QString("%1/%2").arg(aptPkgInfoListDir.path()).arg(fileName); ////
             loadSrvAppInfosFromFile(m_appInfosMap, filePath);
         }
