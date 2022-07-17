@@ -403,7 +403,6 @@ void AppManagerWidget::showAppInfo(const AppInfo &info)
         if (m_showingAppInfo.installedPkgInfo.version == srvPkgInfo.version) {
             m_showingAppInfo.installedPkgInfo.pkgSize = srvPkgInfo.pkgSize;
             m_showingAppInfo.installedPkgInfo.downloadUrl = srvPkgInfo.downloadUrl;
-            break;
         }
     }
 
