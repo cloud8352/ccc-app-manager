@@ -10,6 +10,7 @@
 #include <QTextCodec>
 #include <QStandardItem>
 #include <QMimeDatabase>
+#include <QStandardPaths>
 
 #include <zlib.h>
 #include <aio.h> // async I/O
@@ -96,9 +97,10 @@ AppManagerJob::AppManagerJob(QObject *parent)
     , m_netReply(nullptr)
     , m_pkgMonitor(nullptr)
 {
-    m_downloadDirPath = QString("%1/Desktop/downloadedPkg").arg(QDir::homePath());
+    const QString &desktopPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
+    m_downloadDirPath = QString("%1/downloadedPkg").arg(desktopPath);
     m_pkgBuildCacheDirPath = "/tmp/pkg-build-cache";
-    m_pkgBuildDirPath = QString("%1/Desktop/pkgBuild").arg(QDir::homePath());
+    m_pkgBuildDirPath = QString("%1/pkgBuild").arg(desktopPath);
 }
 
 AppManagerJob::~AppManagerJob()
