@@ -4,7 +4,9 @@
 #include "appmanagermodel.h"
 
 #include <DFrame>
+
 #include <QStandardItem>
+#include <QComboBox>
 
 class AppManagerModel;
 
@@ -88,6 +90,7 @@ private:
     QLabel *m_appCountLabel; // 应用个数标签
     QLabel *m_appAbstractLabel;
     QLabel *m_appNameLable;
+    QComboBox *m_holdVerComboBox; // 是否保持版本下拉框
 
     DButtonBoxButton *m_infoBtn;
     DButtonBoxButton *m_filesBtn;

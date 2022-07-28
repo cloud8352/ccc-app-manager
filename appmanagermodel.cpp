@@ -299,6 +299,9 @@ void AppManagerModel::initConnection()
     connect(m_appManagerJob, &AppManagerJob::appInstalled, this, &AppManagerModel::onAppInstalled);
     connect(m_appManagerJob, &AppManagerJob::appUpdated, this, &AppManagerModel::onAppUpdated);
     connect(m_appManagerJob, &AppManagerJob::appUninstalled, this, &AppManagerModel::onAppUninstalled);
+
+    // 通知线程保持软件包版本
+    connect(this, &AppManagerModel::notigyThreadHoldPkgVersion, m_appManagerJob, &AppManagerJob::holdPkgVersion);
 }
 
 void AppManagerModel::postInit()

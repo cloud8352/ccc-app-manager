@@ -24,6 +24,7 @@ struct PkgInfo {
     QString depositoryUrl; // 仓库地址
     QString pkgName;
     bool isInstalled;
+    bool isHoldVersion; // 是否保持版本
     int installedSize;
     QString updatedTime;
     QString maintainer;
@@ -41,6 +42,7 @@ struct PkgInfo {
         contentSize = 0;
         installedSize = 0;
         isInstalled = false;
+        isHoldVersion = false;
         pkgSize = 0;
     }
 };

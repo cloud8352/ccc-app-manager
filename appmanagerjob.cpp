@@ -404,6 +404,27 @@ void AppManagerJob::installProcInfoPlugin()
     setRunningStatus(Normal);
 }
 
+void AppManagerJob::holdPkgVersion(const QString &pkgName, bool hold)
+{
+    const QString &options = QString("echo %1 %2 | sudo dpkg --set-selections")
+            .arg(pkgName).arg(hold ? "hold" : "install");
+
+    QProcess proc;
+    proc.start("pkexec", {"sh", "-c", options});
+    proc.waitForStarted();
+    proc.waitForFinished();
+
+    QString err = proc.readAllStandardError();
+    if (!err.isEmpty()) {
+        qInfo() << Q_FUNC_INFO << err;
+        proc.close();
+        return;
+    }
+
+    proc.close();
+    onPkgUpdated(pkgName);
+}
+
 void AppManagerJob::onPkgInstalled(const QString &pkgName)
 {
     PkgInfo pkgInfo;
@@ -578,6 +599,7 @@ bool AppManagerJob::getPkgInfoListFromFile(QList<PkgInfo> &pkgInfoList, const QS
 
             if (lineText.startsWith("Status: ")) {
                 pkgInfo.isInstalled = lineText.contains("installed");
+                pkgInfo.isHoldVersion = lineText.contains("hold");
                 continue;
             }
 
@@ -682,6 +704,7 @@ bool AppManagerJob::getInstalledPkgInfo(PkgInfo &pkgInfo, const QString &pkgName
 
         if (lineText.startsWith("Status: ")) {
             pkgInfo.isInstalled = lineText.contains("installed");
+            pkgInfo.isHoldVersion = lineText.contains("hold");
             continue;
         }
 

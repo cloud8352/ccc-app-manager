@@ -68,6 +68,8 @@ Q_SIGNALS:
     void appInstalled(const AM::AppInfo &appInfo);
     void appUpdated(const AM::AppInfo &appInfo);
     void appUninstalled(const AM::AppInfo &appInfo);
+    // 通知线程保持软件包版本
+    void notigyThreadHoldPkgVersion(const QString &pkgName, bool hold);
 
 private Q_SLOTS:
     // 软件安装变动

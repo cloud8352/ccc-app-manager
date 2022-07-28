@@ -49,6 +49,7 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
     , m_appCountLabel(nullptr)
     , m_appAbstractLabel(nullptr)
     , m_appNameLable(nullptr)
+    , m_holdVerComboBox(nullptr)
     , m_infoBtn(nullptr)
     , m_filesBtn(nullptr)
     , m_infoSwitchBtn(nullptr)
@@ -170,6 +171,16 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
     appAbstractLayout->addWidget(m_appNameLable);
     appAbstractLayout->addStretch(1);
 
+    // 是否保持版本
+    m_holdVerComboBox = new QComboBox(this);
+    m_holdVerComboBox->setToolTip("保持版本：不随系统更新而更新，dpkg --get-selections查询该安装包状态为hold\n"
+                                "不保持版本：会随系统更新而更新，dpkg --get-selections查询该安装包状态为install");
+    m_holdVerComboBox->setEditable(false);
+    m_holdVerComboBox->insertItems(0, {"保持版本", "不保持版本"});
+    m_holdVerComboBox->setCurrentIndex(1);
+    appAbstractLayout->addWidget(m_holdVerComboBox);
+
+    appAbstractLayout->addSpacing(20);
     DSuggestButton *openBtn = new DSuggestButton(this);
     openBtn->setText("打开");
     appAbstractLayout->addWidget(openBtn);
@@ -296,6 +307,13 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
         m_model->startDetachedDesktopExec(m_showingAppInfo.desktopInfo.exec);
     });
 
+    connect(m_holdVerComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, [this](int index) {
+        m_holdVerComboBox->blockSignals(true);
+        m_holdVerComboBox->setCurrentIndex(m_showingAppInfo.installedPkgInfo.isHoldVersion ? 0 : 1);
+        m_holdVerComboBox->blockSignals(false);
+        Q_EMIT m_model->notigyThreadHoldPkgVersion(m_showingAppInfo.pkgName, 0 == index);
+    });
+
     connect(m_infoSwitchBtn, &DButtonBox::buttonClicked, this, [this](QAbstractButton *btn) {
         if (m_infoBtn == btn) {
             this->showAppInfo(m_showingAppInfo);
@@ -419,6 +437,11 @@ void AppManagerWidget::showAppInfo(const AppInfo &info)
     }
     m_appNameLable->setText(appName);
 
+    // 更新是否保持版本
+    m_holdVerComboBox->blockSignals(true);
+    m_holdVerComboBox->setCurrentIndex(m_showingAppInfo.installedPkgInfo.isHoldVersion ? 0 : 1);
+    m_holdVerComboBox->blockSignals(false);
+
     m_infoBtn->setChecked(true);
 
     m_appInfoTextEdit->setText(formateAppInfo(m_showingAppInfo));
@@ -428,16 +451,7 @@ void AppManagerWidget::showAppInfo(const AppInfo &info)
 
 void AppManagerWidget::showAppFileList(const AppInfo &info)
 {
-    m_showingAppInfo = info;
-
-    const QString themeIconName = m_showingAppInfo.desktopInfo.themeIconName;
-    if (!themeIconName.isEmpty()) {
-        m_appAbstractLabel->setPixmap(QIcon::fromTheme(themeIconName).pixmap(40, 40));
-    } else {
-        m_appAbstractLabel->setPixmap(QIcon::fromTheme(APP_THEME_ICON_DEFAULT).pixmap(40, 40));
-    }
-    m_appNameLable->setText(m_showingAppInfo.desktopInfo.appName);
-
+    Q_UNUSED(info);
     m_filesBtn->setChecked(true);
 
     m_appInfoTextEdit->hide();

@@ -56,6 +56,9 @@ public Q_SLOTS:
     void installOhMyDDE();
     void installProcInfoPlugin();
 
+    // 保持软件包版本
+    void holdPkgVersion(const QString &pkgName, bool hold);
+
 private Q_SLOTS:
     // 包安装变动
     void onPkgInstalled(const QString &pkgName);
