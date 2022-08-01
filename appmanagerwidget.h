@@ -35,7 +35,8 @@ public:
         All = 0,
         Installed,
         Gui,
-        Searched
+        Searched,
+        VerHeld //保持版本
     };
 
     AppManagerWidget(AppManagerModel *model, QWidget *parent = nullptr);
@@ -60,6 +61,7 @@ private:
     void onlyShowInstalledAppInfoList();
     void onlyShowUIAppInfoList();
     void showSearchedAppInfoList();
+    void showVerHeldAppInfoList();
 
     void setLoading(bool loading);
     QList<QStandardItem *> createViewItemList(const AM::AppInfo &appInfo);
@@ -83,6 +85,7 @@ private:
     QAction *m_showInstalledAppAction;
     QAction *m_showGuiAppAction;
     QAction *m_showSearchedAppAction;
+    QAction *m_showVerHeldAppAction; // 保持版本的app过滤按钮
     DisplayRangeType m_displayRangeType; // 显示范围类型
 
     QStandardItemModel *m_appListModel;
