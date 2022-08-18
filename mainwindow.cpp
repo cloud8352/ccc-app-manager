@@ -58,7 +58,9 @@ MainWindow::MainWindow(QWidget *parent)
     int dtkWindowRadius = 8;
     if (QGSettings::isSchemaInstalled("com.deepin.xsettings")) {
         QGSettings deepinSettings("com.deepin.xsettings");
-        dtkWindowRadius = deepinSettings.get("dtk-window-radius").toInt();
+        if (deepinSettings.keys().contains("dtk-window-radius")) {
+            dtkWindowRadius = deepinSettings.get("dtk-window-radius").toInt();
+        }
     }
     int internalPix =  dtkWindowRadius < 9 ? 0 : (dtkWindowRadius - 8) / 2;
     centralWidget->setContentsMargins(4 + internalPix, 0, 4 + internalPix, 4 + internalPix);
