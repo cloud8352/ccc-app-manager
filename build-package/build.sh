@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ###############设定编译变量
-VERSION="0.0.6"
+VERSION="0.0.6-1"
 
 echo "build.sh修改自柚柚的 https://gitee.com/deepin-opensource/one-cuter"
 

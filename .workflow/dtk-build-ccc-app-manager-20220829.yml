@@ -1,0 +1,59 @@
+version: '1.0'
+name: dtk-build-ccc-app-manager-20220829
+displayName: dtk-build-ccc-app-manager
+triggers:
+  trigger: auto
+  push:
+    branches:
+      prefix:
+        - ''
+  pr:
+    branches:
+      prefix:
+        - ''
+stages:
+  - name: stage-c9e7dc6d
+    displayName: 构建
+    strategy: naturally
+    trigger: auto
+    executor: []
+    steps:
+      - step: build@nodejs
+        name: dtk-build
+        displayName: Dtk build
+        nodeVersion: 17.8.0
+        commands:
+          - git clone https://gitlink.org.cn/shenmo7192/debian-10-container.git
+          - mv debian-10-container/Debian-10.tar.xz /mnt
+          - rm -rf debian-10-container
+          - WORK_DIR=`pwd`
+          - cd /mnt/
+          - tar -xf Debian-10.tar.xz
+          - cd Debian-10
+          - cp -r $WORK_DIR gitee-go-build
+          - wget https://gitee.com/ct243768648/ccc-app-manager/raw/main/build-on-gitee.sh
+          - chmod +x build-on-gitee.sh
+          - echo "进入Debian 10环境"
+          - chroot /mnt/Debian-10 /bin/bash /build-on-gitee.sh
+        artifacts:
+          - name: BUILD_ARTIFACT
+            path:
+              - /mnt/Debian-10/target
+        caches: []
+        notify: []
+        strategy:
+          retry: '0'
+  - name: stage-421e5f07
+    displayName: 上传
+    strategy: naturally
+    trigger: auto
+    executor: []
+    steps:
+      - step: publish@general_artifacts
+        name: publish_general_artifacts
+        displayName: 上传制品
+        dependArtifact: BUILD_ARTIFACT
+        artifactName: output
+        notify: []
+        strategy:
+          retry: '0'
