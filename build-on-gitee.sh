@@ -3,7 +3,7 @@ sed -i 's/deb.debian.org/mirrors.ustc.edu.cn/g' /etc/apt/sources.list
 apt update
 export DEBIAN_FRONTEND=noninteractive
 echo "安装依赖..."
-apt install git curl fakeroot qtbase5-dev zlib1g-dev qt5-default -y 
+apt install git curl fakeroot qtbase5-dev zlib1g-dev qt5-default libgsettings-qt-dev -y 
 git clone https://gitlink.org.cn/shenmo7192/dtk-old-bundle.git
 cd dtk-old-bundle
 apt install ./*.deb -y
