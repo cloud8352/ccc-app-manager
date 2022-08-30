@@ -22,8 +22,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-CONFIG += c++11 link_pkgconfig zlib
-PKGCONFIG += gsettings-qt
+CONFIG += c++11 link_pkgconfig
 
 SOURCES += \
         main.cpp \
@@ -64,6 +63,5 @@ INSTALLS += target icon opt_desktop usr_desktop pkg
 RESOURCES += \
     resources/icons.qrc
 
-unix{
-LIBS += -L$$PWD/zlib -lz
-}
+LIBS += -L$$PWD/zlib -lz \
+    -L$$PWD/ -lgsettings-qt

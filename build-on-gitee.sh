@@ -1,4 +1,4 @@
-sed -i 's/deb.debian.org/mirrors.ustc.edu.cn/g' /etc/apt/sources.list
+echo "deb https://mirrors.huaweicloud.com/debian/ buster main contrib non-free" > /etc/apt/sources.list
 # 换源
 apt update
 export DEBIAN_FRONTEND=noninteractive
@@ -13,9 +13,9 @@ rm -rf dtk-old-bundle
 
 cd gitee-go-build
 
-build-package/build.sh
-
 cd build-package
+./build.sh
+
 mkdir target
 
 for f in $(find . -type f -name "*.deb")
