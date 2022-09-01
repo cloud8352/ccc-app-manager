@@ -1,7 +1,7 @@
 #pragma once
 
-#include "appmanagercommon.h"
-#include "pkgmonitor.h"
+#include "../common/appmanagercommon.h"
+#include "../pkgmonitor/pkgmonitor.h"
 
 #include <QObject>
 #include <QMap>

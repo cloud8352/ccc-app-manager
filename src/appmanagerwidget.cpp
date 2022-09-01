@@ -1,5 +1,5 @@
 #include "appmanagerwidget.h"
-#include "pkgdownloaddlg.h"
+#include "dlg/pkgdownloaddlg.h"
 
 #include <DTitlebar>
 #include <DListView>

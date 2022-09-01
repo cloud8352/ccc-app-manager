@@ -1,5 +1,5 @@
 #pragma once
-#include "appmanagercommon.h"
+#include "../common/appmanagercommon.h"
 
 #include <DFrame>
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "appmanagercommon.h"
-#include "appmanagerjob.h"
+#include "common/appmanagercommon.h"
+#include "job/appmanagerjob.h"
 
 #include <QObject>
 #include <QMap>

@@ -25,23 +25,23 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11 link_pkgconfig
 
 SOURCES += \
-        main.cpp \
-        mainwindow.cpp \
-    appmanagerjob.cpp \
-    appmanagerwidget.cpp \
-    appmanagercommon.cpp \
-    pkgdownloaddlg.cpp \
-    appmanagermodel.cpp \
-    pkgmonitor.cpp
+        src/main.cpp \
+        src/mainwindow.cpp \
+    src/appmanagerwidget.cpp \
+    src/appmanagermodel.cpp \
+    src/job/appmanagerjob.cpp \
+    src/common/appmanagercommon.cpp \
+    src/dlg/pkgdownloaddlg.cpp \
+    src/pkgmonitor/pkgmonitor.cpp
 
 HEADERS += \
-        mainwindow.h \
-    appmanagerjob.h \
-    appmanagerwidget.h \
-    appmanagercommon.h \
-    pkgdownloaddlg.h \
-    appmanagermodel.h \
-    pkgmonitor.h
+        src/mainwindow.h \
+    src/appmanagerwidget.h \
+    src/appmanagermodel.h \
+    src/job/appmanagerjob.h \
+    src/common/appmanagercommon.h \
+    src/dlg/pkgdownloaddlg.h \
+    src/pkgmonitor/pkgmonitor.h
 
 # Default rules for deployment.
 target.path = /opt/apps/com.github.ccc-app-manager/files

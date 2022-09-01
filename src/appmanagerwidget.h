@@ -1,6 +1,6 @@
 #pragma once
 
-#include "appmanagercommon.h"
+#include "common/appmanagercommon.h"
 #include "appmanagermodel.h"
 
 #include <DFrame>

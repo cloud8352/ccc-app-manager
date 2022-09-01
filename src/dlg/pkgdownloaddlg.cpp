@@ -1,5 +1,5 @@
 #include "pkgdownloaddlg.h"
-#include "appmanagermodel.h"
+#include "../appmanagermodel.h"
 
 #include <DTitlebar>
 #include <DBlurEffectWidget>
