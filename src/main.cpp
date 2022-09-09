@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
     a.setAttribute(Qt::AA_UseHighDpiPixmaps);
     a.setOrganizationName("ccc");
     a.setApplicationName("ccc-app-manager");
-    a.setApplicationVersion(DApplication::buildVersion("0.0.6-1")); //change version here
+    a.setApplicationVersion(DApplication::buildVersion(QMAKE_VERSION)); //change version here
     a.loadTranslator();
     a.setApplicationDisplayName(QObject::tr("App Manager"));
     a.setStyle("chameleon");

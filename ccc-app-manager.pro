@@ -43,6 +43,13 @@ HEADERS += \
     src/dlg/pkgdownloaddlg.h \
     src/pkgmonitor/pkgmonitor.h
 
+isEmpty(VERSION) {
+    VERSION = 0.0.1
+}
+DEFINES += QMAKE_TARGET=\\\"$$TARGET\\\" QMAKE_VERSION=\\\"$$VERSION\\\"
+
+message(VERSION: $$VERSION)
+
 # Default rules for deployment.
 target.path = /opt/apps/com.github.ccc-app-manager/files
 
@@ -58,7 +65,10 @@ usr_desktop.path = /usr/share/applications
 pkg.files = ./pkg/*
 pkg.path = /opt/apps/com.github.ccc-app-manager/files/pkg
 
-INSTALLS += target icon opt_desktop usr_desktop pkg
+start.files = ./start.sh
+start.path = /opt/apps/com.github.ccc-app-manager/files
+
+INSTALLS += target icon opt_desktop usr_desktop pkg start
 
 RESOURCES += \
     resources/icons.qrc
