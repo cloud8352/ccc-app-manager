@@ -539,7 +539,11 @@ void AppManagerWidget::onAppInstalled(const AM::AppInfo &appInfo)
     // 刷新右侧显示内容
     if (appInfo.pkgName == m_showingAppInfo.pkgName) {
         // 更改后，显示列表当前选中应用
-        AppInfo currentAppInfo = m_showingInfoList.at(m_appListView->currentIndex().row());
+        AppInfo currentAppInfo;
+        if (0 <= m_appListView->currentIndex().row() &&
+                m_appListView->currentIndex().row() < m_showingInfoList.size()) {
+            currentAppInfo = m_showingInfoList.at(m_appListView->currentIndex().row());
+        }
         showAppInfo(currentAppInfo);
     }
     // 更新应用个数标签
@@ -665,7 +669,11 @@ void AppManagerWidget::onAppUpdated(const AM::AppInfo &appInfo)
     // 刷新右侧显示内容
     if (appInfo.pkgName == m_showingAppInfo.pkgName) {
         // 更改后，显示列表当前选中应用
-        AppInfo currentAppInfo = m_showingInfoList.at(m_appListView->currentIndex().row());
+        AppInfo currentAppInfo;
+        if (0 <= m_appListView->currentIndex().row() &&
+                m_appListView->currentIndex().row() < m_showingInfoList.size()) {
+            currentAppInfo = m_showingInfoList.at(m_appListView->currentIndex().row());
+        }
         showAppInfo(currentAppInfo);
     }
     // 更新应用个数标签
@@ -728,7 +736,11 @@ void AppManagerWidget::onAppUninstalled(const AM::AppInfo &appInfo)
     // 刷新右侧显示内容
     if (appInfo.pkgName == m_showingAppInfo.pkgName) {
         // 删除后，显示列表当前选中应用
-        AppInfo currentAppInfo = m_showingInfoList.at(m_appListView->currentIndex().row());
+        AppInfo currentAppInfo;
+        if (0 <= m_appListView->currentIndex().row() &&
+                m_appListView->currentIndex().row() < m_showingInfoList.size()) {
+            currentAppInfo = m_showingInfoList.at(m_appListView->currentIndex().row());
+        }
         showAppInfo(currentAppInfo);
     }
     // 更新应用个数标签
@@ -805,6 +817,9 @@ void AppManagerWidget::setItemModelFromAppInfoList(const QList<AppInfo> &appInfo
     if (!m_showingInfoList.isEmpty()) {
         m_appListView->setCurrentIndex(m_appListModel->index(0, 0));
         showAppInfo(m_showingInfoList[0]);
+    } else {
+        // 此类别无应用，则显示空信息
+        showAppInfo(AppInfo());
     }
 }
 
