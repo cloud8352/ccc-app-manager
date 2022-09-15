@@ -804,9 +804,14 @@ void AppManagerJob::loadPkgInstalledAppInfo(const AM::PkgInfo &pkgInfo)
     // 获取安装文件路径列表
     appInfo->installedPkgInfo.installedFileList = getAppInstalledFileList(appInfo->installedPkgInfo.pkgName);
     // 获取desktop
-    appInfo->desktopInfo.desktopPath = getAppDesktopPath(appInfo->installedPkgInfo.installedFileList,
-                                                         appInfo->installedPkgInfo.pkgName);
-    appInfo->desktopInfo = getDesktopInfo(appInfo->desktopInfo.desktopPath);
+    QStringList desktopPathList = getAppDesktopPathList(appInfo->installedPkgInfo.installedFileList,
+                                                    appInfo->installedPkgInfo.pkgName);
+    for (QStringList::const_iterator iter = desktopPathList.begin(); iter != desktopPathList.end(); ++iter) {
+        appInfo->desktopInfo = getDesktopInfo(*iter);
+        if (!appInfo->desktopInfo.desktopPath.isEmpty()) {
+            break;
+        }
+    }
 
     m_mutex.unlock(); // 解锁
 }
@@ -844,19 +849,22 @@ QStringList AppManagerJob::getAppInstalledFileList(const QString &pkgName)
     return fileList;
 }
 
-QString AppManagerJob::getAppDesktopPath(const QStringList &list, const QString &pkgName)
+QStringList AppManagerJob::getAppDesktopPathList(const QStringList &list, const QString &pkgName)
 {
+    QStringList desktopPathList;
     for (const QString &path : list) {
         if (path.startsWith("/usr/share/applications/") && path.endsWith(".desktop")) {
-            return path;
+            desktopPathList.append(path);
+            continue;
         }
 
         if (path.startsWith(QString("/opt/apps/%1/entries/applications/").arg(pkgName)) && path.endsWith(".desktop")) {
-            return path;
+            desktopPathList.append(path);
+            continue;
         }
     }
 
-    return {};
+    return desktopPathList;
 }
 
 DesktopInfo AppManagerJob::getDesktopInfo(const QString &desktop)

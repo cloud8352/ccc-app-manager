@@ -105,7 +105,7 @@ private:
     void loadAllPkgInstalledAppInfos();
 
     QStringList getAppInstalledFileList(const QString &pkgName);
-    QString getAppDesktopPath(const QStringList &list, const QString &pkgName);
+    QStringList getAppDesktopPathList(const QStringList &list, const QString &pkgName);
     AM::DesktopInfo getDesktopInfo(const QString &desktop);
 
     qint64 getUrlFileSize(QString &url, int tryTimes = 3);
