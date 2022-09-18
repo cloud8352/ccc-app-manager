@@ -53,7 +53,7 @@ message(VERSION: $$VERSION)
 # Default rules for deployment.
 target.path = /opt/apps/com.github.ccc-app-manager/files
 
-icon.files = ./ccc-app-manager.svg
+icon.files = ./resources/icons/ccc-app-manager_56px.svg
 icon.path = /opt/apps/com.github.ccc-app-manager/files
 
 opt_desktop.files = ./com.github.ccc-app-manager.desktop

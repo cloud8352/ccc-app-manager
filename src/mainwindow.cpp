@@ -25,7 +25,7 @@ MainWindow::MainWindow(QWidget *parent)
     setTitlebarShadowEnabled(false);
     setFocusPolicy(Qt::FocusPolicy::ClickFocus);
 
-    titlebar()->setIcon(QIcon(":/icons/deepin/builtin/icons/grid_48px.svg"));
+    titlebar()->setIcon(QIcon::fromTheme("ccc-app-manager"));
     titlebar()->setTitle("应用管理器");
     titlebar()->setFixedHeight(40);
     titlebar()->setBackgroundTransparent(true);
