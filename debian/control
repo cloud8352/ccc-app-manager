@@ -15,7 +15,6 @@ Homepage: https://gitee.com/ct243768648/ccc-app-manager
 Package: com.github.ccc-app-manager
 Priority: optional
 Section: unknown
-Installed-Size: 3985
 Maintainer: keke <243768648@qq.com>
 Architecture: amd64
 Version: 0.0.4

@@ -6,7 +6,6 @@ Comment=app manager,app,system
 Encoding=UTF-8
 Exec=/opt/apps/com.github.ccc-app-manager/files/start.sh "%F"
 Icon=/opt/apps/com.github.ccc-app-manager/files/ccc-app-manager_56px.svg
-Name=com.github.ccc-app-manager.desktop
 StartupNotify=true
 Terminal=false
 Type=Application
