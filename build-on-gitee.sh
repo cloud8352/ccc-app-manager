@@ -4,7 +4,7 @@ apt update
 export DEBIAN_FRONTEND=noninteractive
 echo "安装依赖..."
 apt-get install libgsettings-qt-dev -y 
-apt-get install git curl fakeroot qtbase5-dev zlib1g-dev qt5-default  -y 
+apt-get install debhelper git curl fakeroot qtbase5-dev zlib1g-dev qt5-default  -y 
 git clone https://gitlink.org.cn/shenmo7192/dtk-old-bundle.git
 cd dtk-old-bundle
 apt install ./*.deb -y
@@ -13,7 +13,7 @@ rm -rf dtk-old-bundle
 
 cd gitee-go-build
 
-version=${WORK_FLOW_ENV_PKG_VERSION}
+export version=${WORK_FLOW_ENV_PKG_VERSION}
 ./dpkg-buildpackage.sh
 
 mkdir target
