@@ -37,6 +37,7 @@ stages:
           - wget https://gitee.com/ct243768648/ccc-app-manager/raw/main/build-on-gitee.sh
           - chmod +x build-on-gitee.sh
           - echo "进入Debian 10环境"
+          - echo ${WORK_FLOW_ENV_PKG_VERSION}
           - chroot /mnt/Debian-10 /bin/bash /build-on-gitee.sh
         artifacts:
           - name: BUILD_ARTIFACT
