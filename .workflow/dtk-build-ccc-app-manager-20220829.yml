@@ -11,6 +11,9 @@ triggers:
     branches:
       prefix:
         - ''
+variables:
+  global:
+    - WORK_FLOW_ENV_PKG_VERSION
 stages:
   - name: stage-c9e7dc6d
     displayName: 构建

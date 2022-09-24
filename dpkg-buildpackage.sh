@@ -1,5 +1,10 @@
 #!/bin/bash
-read -p "version: " version
+
+# 获取版本号
+if [[ "" == $version ]] || [[ "\n" == $version ]]
+then
+    read -p "version: " version
+fi
 
 mkdir -p dpkg-build-tmp
 cd dpkg-build-tmp

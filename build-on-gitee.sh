@@ -13,12 +13,13 @@ rm -rf dtk-old-bundle
 
 cd gitee-go-build
 
-cd build-package
-./build.sh
+version=${WORK_FLOW_ENV_PKG_VERSION}
+./dpkg-buildpackage.sh
 
 mkdir target
 
-for f in $(find . -type f -name "*.deb")
+output_file_path_list=$(find . -maxdepth 1 -type f -name "com.github.ccc-app-manager_*" -o -name "com.github.ccc-app-manager-dbgsym_*")
+for f in ${output_file_path_list}
 do
     mv $f target
 done
