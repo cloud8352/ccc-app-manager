@@ -754,18 +754,18 @@ QString AppManagerWidget::formateAppInfo(const AppInfo &info)
     text += "本地安装信息\n"
             "-----------------------------\n";
     if (info.isInstalled) {
-        text += QString("应用名：%1\n包名：%2\n安装后占用：%3KB\n更新时间：%4\n维护者：%5\n"
-                        "架构：%6\n版本：%7\n下载地址：%8\n安装包大小：%9B\n主页：%10\n"
+        text += QString("应用名：%1\n包名：%2\n安装后占用：%3\n更新时间：%4\n维护者：%5\n"
+                        "架构：%6\n版本：%7\n下载地址：%8\n安装包大小：%9\n主页：%10\n"
                         "桌面文件：%11\n执行命令：%12\n执行路径：%13\n依赖：%14\n描述：%15\n\n")
                     .arg(info.desktopInfo.appName)
                     .arg(info.installedPkgInfo.pkgName)
-                    .arg(info.installedPkgInfo.installedSize)
+                    .arg(info.installedPkgInfo.installedSize ? formatBytes(info.installedPkgInfo.installedSize * 1024, 2) : "0 B")
                     .arg(info.installedPkgInfo.updatedTime)
                     .arg(info.installedPkgInfo.maintainer)
                     .arg(info.installedPkgInfo.arch)
                     .arg(info.installedPkgInfo.version)
                     .arg(info.installedPkgInfo.downloadUrl)
-                    .arg(info.installedPkgInfo.pkgSize)
+                    .arg(info.installedPkgInfo.pkgSize ? formatBytes(info.installedPkgInfo.pkgSize, 1) : "0 B")
                     .arg(info.installedPkgInfo.homepage)
                     .arg(info.desktopInfo.desktopPath)
                     .arg(info.desktopInfo.exec)

@@ -51,3 +51,22 @@ void AM::popupNormalSysNotify(const QString &summary, const QString &body)
     QProcess proc;
     proc.startDetached("notify-send", {"-a", "com.github.ccc-app-manager", summary, body});
 }
+
+// 格式化容量
+QString AM::formatBytes(qint64 input, int prec)
+{
+    QString flowValueStr;
+    if (KB_COUNT > input) {
+        flowValueStr = QString::number(input / 1, 'd', prec) + " B";
+    } else if (MB_COUNT > input) {
+        flowValueStr = QString::number(input / KB_COUNT + double(input % KB_COUNT) / KB_COUNT, 'd', prec) + " KB";
+    } else if (GB_COUNT > input) {
+        flowValueStr = QString::number(input / MB_COUNT + double(input % MB_COUNT) / MB_COUNT, 'd', prec) + " MB";
+    } else if (TB_COUNT > input) {
+        flowValueStr = QString::number(input / GB_COUNT + double(input % GB_COUNT) / GB_COUNT, 'd', prec) + " GB";
+    } else {
+        // 大于TB单位
+        flowValueStr = QString::number(input / TB_COUNT + double(input % TB_COUNT) / TB_COUNT, 'd', prec) + " TB";
+    }
+    return flowValueStr;
+}

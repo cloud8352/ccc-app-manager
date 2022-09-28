@@ -10,6 +10,12 @@
 // 列表数据角色定义
 #define AM_LIST_VIEW_ITEM_DATA_ROLE_PKG_NAME Dtk::ItemDataRole::UserRole + 1
 
+// 文件大小单位，以b为基本单位
+#define KB_COUNT (1 << 10)
+#define MB_COUNT (1 << 20)
+#define GB_COUNT (1 << 30)
+#define TB_COUNT (long(1) << 40)
+
 namespace AM {
 // 运行状态
 enum RunningStatus {
@@ -88,4 +94,6 @@ bool isChineseChar(const QChar &character);
 PinyinInfo getPinYinInfoFromStr(const QString &words);
 
 void popupNormalSysNotify(const QString &summary, const QString &body);
+// 格式化容量
+QString formatBytes(qint64 input, int prec);
 } // namespace AM

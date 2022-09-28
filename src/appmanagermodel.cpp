@@ -41,18 +41,18 @@ QList<AM::AppInfo> AppManagerModel::getAppInfosList()
 
 QString AppManagerModel::formatePkgInfo(const PkgInfo &info)
 {
-    QString text = QString("应用名：%1\n包名：%2\n安装后占用：%3KB\n更新时间：%4\n维护者：%5\n"
-                           "架构：%6\n版本：%7\n下载地址：%8\n安装包大小：%9B\n主页：%10\n"
+    QString text = QString("应用名：%1\n包名：%2\n安装后占用：%3\n更新时间：%4\n维护者：%5\n"
+                           "架构：%6\n版本：%7\n下载地址：%8\n安装包大小：%9\n主页：%10\n"
                            "桌面文件：%11\n执行命令：%12\n执行路径：%13\n依赖：%14\n描述：%15\n\n")
                        .arg("")
                        .arg(info.pkgName)
-                       .arg(info.installedSize)
+                       .arg(info.installedSize ? formatBytes(info.installedSize * 1024, 2) : "0 B")
                        .arg(info.updatedTime)
                        .arg(info.maintainer)
                        .arg(info.arch)
                        .arg(info.version)
                        .arg(info.downloadUrl)
-                       .arg(info.pkgSize)
+                       .arg(info.pkgSize ? formatBytes(info.pkgSize, 1) : "0 B")
                        .arg(info.homepage)
                        .arg("")
                        .arg("")
