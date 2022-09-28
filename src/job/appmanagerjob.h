@@ -104,7 +104,7 @@ private:
     // 从包信息列表中加载已安装应用信息列表
     void loadAllPkgInstalledAppInfos();
 
-    QStringList getAppInstalledFileList(const QString &pkgName);
+    QStringList getAppInstalledFileList(const QString &pkgName, const QString &arch);
     QStringList getAppDesktopPathList(const QStringList &list, const QString &pkgName);
     AM::DesktopInfo getDesktopInfo(const QString &desktop);
 

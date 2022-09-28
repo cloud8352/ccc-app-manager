@@ -802,7 +802,7 @@ void AppManagerJob::loadPkgInstalledAppInfo(const AM::PkgInfo &pkgInfo)
     appInfo->installedPkgInfo = pkgInfo;
 
     // 获取安装文件路径列表
-    appInfo->installedPkgInfo.installedFileList = getAppInstalledFileList(appInfo->installedPkgInfo.pkgName);
+    appInfo->installedPkgInfo.installedFileList = getAppInstalledFileList(appInfo->installedPkgInfo.pkgName, appInfo->installedPkgInfo.arch);
     // 获取desktop
     QStringList desktopPathList = getAppDesktopPathList(appInfo->installedPkgInfo.installedFileList,
                                                     appInfo->installedPkgInfo.pkgName);
@@ -830,11 +830,15 @@ void AppManagerJob::loadAllPkgInstalledAppInfos()
     }
 }
 
-QStringList AppManagerJob::getAppInstalledFileList(const QString &pkgName)
+QStringList AppManagerJob::getAppInstalledFileList(const QString &pkgName, const QString &arch)
 {
     QStringList fileList;
 
-    QFile installedListFile(QString("/var/lib/dpkg/info/%1.list").arg(pkgName));
+    // 判断文件名中是否有架构名
+    QString listFilePath = QString("/var/lib/dpkg/info/%1.list").arg(pkgName);
+    QString archContent = QFile::exists(listFilePath) ? "" : QString(":%1").arg(arch);
+
+    QFile installedListFile(QString("/var/lib/dpkg/info/%1%2.list").arg(pkgName).arg(archContent));
     if (!installedListFile.open(QIODevice::OpenModeFlag::ReadOnly)) {
         qInfo() << Q_FUNC_INFO << "open" << installedListFile.fileName() << "failed!";
         return fileList;
@@ -1032,47 +1036,63 @@ bool AppManagerJob::buildPkg(const AppInfo &info)
         QFile::copy(copyrightFilePath, copyrightFileOutputPath);
     }
 
+    // 判断文件名中是否有架构名
+    QString listFilePath = QString("/var/lib/dpkg/info/%1.list").arg(info.pkgName);
+    QString archContent = QFile::exists(listFilePath) ? "" : QString(":%1").arg(info.installedPkgInfo.arch);
+
     // 收集DEBIAN/postinst文件
-    QString postinstFilePath = QString("/var/lib/dpkg/info/%1.postinst").arg(info.pkgName);
+    QString postinstFilePath = QString("/var/lib/dpkg/info/%1%2.postinst").arg(info.pkgName).arg(archContent);
     QString postinstFileOutputPath = QString("%1/postinst").arg(outputDebianDir);
     if (QFile::exists(postinstFilePath)) {
         QFile::copy(postinstFilePath, postinstFileOutputPath);
     }
     // 收集DEBIAN/postrm文件
-    QString postrmFilePath = QString("/var/lib/dpkg/info/%1.postrm").arg(info.pkgName);
+    QString postrmFilePath = QString("/var/lib/dpkg/info/%1%2.postrm").arg(info.pkgName).arg(archContent);
     QString postrmFileOutputPath = QString("%1/postrm").arg(outputDebianDir);
     if (QFile::exists(postrmFilePath)) {
         QFile::copy(postrmFilePath, postrmFileOutputPath);
     }
     // 收集DEBIAN/preinst文件
-    QString preinstFilePath = QString("/var/lib/dpkg/info/%1.preinst").arg(info.pkgName);
+    QString preinstFilePath = QString("/var/lib/dpkg/info/%1%2.preinst").arg(info.pkgName).arg(archContent);
     QString preinstFileOutputPath = QString("%1/preinst").arg(outputDebianDir);
     if (QFile::exists(preinstFilePath)) {
         QFile::copy(preinstFilePath, preinstFileOutputPath);
     }
     // 收集DEBIAN/prerm文件
-    QString prermFilePath = QString("/var/lib/dpkg/info/%1.prerm").arg(info.pkgName);
+    QString prermFilePath = QString("/var/lib/dpkg/info/%1%2.prerm").arg(info.pkgName).arg(archContent);
     QString prermFileOutputPath = QString("%1/prerm").arg(outputDebianDir);
     if (QFile::exists(prermFilePath)) {
         QFile::copy(prermFilePath, prermFileOutputPath);
     }
     // 收集DEBIAN/conffiles文件
-    QString conffilesFilePath = QString("/var/lib/dpkg/info/%1.conffiles").arg(info.pkgName);
+    QString conffilesFilePath = QString("/var/lib/dpkg/info/%1%2.conffiles").arg(info.pkgName).arg(archContent);
     QString conffilesFileOutputPath = QString("%1/conffiles").arg(outputDebianDir);
     if (QFile::exists(conffilesFilePath)) {
         QFile::copy(conffilesFilePath, conffilesFileOutputPath);
     }
     // 收集DEBIAN/md5sums文件
-    QString md5sumsFilePath = QString("/var/lib/dpkg/info/%1.md5sums").arg(info.pkgName);
+    QString md5sumsFilePath = QString("/var/lib/dpkg/info/%1%2.md5sums").arg(info.pkgName).arg(archContent);
     QString md5sumsFileOutputPath = QString("%1/md5sums").arg(outputDebianDir);
     if (QFile::exists(md5sumsFilePath)) {
         QFile::copy(md5sumsFilePath, md5sumsFileOutputPath);
     }
     // 收集DEBIAN/triggers文件
-    QString triggersFilePath = QString("/var/lib/dpkg/info/%1.triggers").arg(info.pkgName);
+    QString triggersFilePath = QString("/var/lib/dpkg/info/%1%2.triggers").arg(info.pkgName).arg(archContent);
     QString triggersFileOutputPath = QString("%1/triggers").arg(outputDebianDir);
     if (QFile::exists(triggersFilePath)) {
         QFile::copy(triggersFilePath, triggersFileOutputPath);
+    }
+    // 收集DEBIAN/shlibs文件
+    QString shlibsFilePath = QString("/var/lib/dpkg/info/%1%2.shlibs").arg(info.pkgName).arg(archContent);
+    QString shlibsFileOutputPath = QString("%1/shlibs").arg(outputDebianDir);
+    if (QFile::exists(shlibsFilePath)) {
+        QFile::copy(shlibsFilePath, shlibsFileOutputPath);
+    }
+    // 收集DEBIAN/symbols文件
+    QString symbolsFilePath = QString("/var/lib/dpkg/info/%1%2.symbols").arg(info.pkgName).arg(archContent);
+    QString symbolsFileOutputPath = QString("%1/symbols").arg(outputDebianDir);
+    if (QFile::exists(symbolsFilePath)) {
+        QFile::copy(symbolsFilePath, symbolsFileOutputPath);
     }
 
     //// 4. 收集DEBIAN/control文件
