@@ -68,7 +68,11 @@ pkg.path = /opt/apps/com.github.ccc-app-manager/files/pkg
 start.files = ./start.sh
 start.path = /opt/apps/com.github.ccc-app-manager/files
 
-INSTALLS += target icon opt_desktop usr_desktop pkg start
+# deepin安装包信息
+deepin_pkg_info.files = ./debian/deepin_pkg_info/info
+deepin_pkg_info.path = /opt/apps/com.github.ccc-app-manager
+
+INSTALLS += target icon opt_desktop usr_desktop pkg start deepin_pkg_info
 
 RESOURCES += \
     resources/icons.qrc
