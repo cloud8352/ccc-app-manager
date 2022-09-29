@@ -352,30 +352,55 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
 
     // 离线获取安装包
     connect(getPkgFromLocalBtn, &QPushButton::clicked, this, [this](bool) {
+        // 确认窗口
+        DDialog confirmDlg;
+        confirmDlg.setMessage("是否开始离线获取安装包？");
+
+        // 取消按钮
+        confirmDlg.addButton("取消", false);
+        // 确定按钮
+        confirmDlg.addButton("确定", true);
+        int ret = confirmDlg.exec();
+        if (1 == ret) {
+            confirmDlg.deleteLater();
+        } else {
+            return;
+        }
+
         Q_EMIT this->m_model->notifyThreadBuildPkg(m_showingAppInfo);
         DDialog *dlg = new DDialog(this);
         dlg->setCloseButtonVisible(false);
         QString title = QString("%1安装包构建中...").arg(m_showingAppInfo.pkgName);
         dlg->setTitle(title);
+
+        // 窗口内容控件
+        QWidget *contentWidget = new QWidget(dlg);
+        QVBoxLayout *contentLayout = new QVBoxLayout;
+        contentWidget->setLayout(contentLayout);
+        dlg->addContent(contentWidget);
+
         // 构建目录
-        QLabel *buildDirLabel = new QLabel(this);
+        QLabel *buildDirLabel = new QLabel(dlg);
         QString buildDirLabelStr = QString("生成目录: %1").arg(m_model->getPkgBuildDirPath());
         buildDirLabel->setText(buildDirLabelStr);
-        dlg->addContent(buildDirLabel);
+        contentLayout->addWidget(buildDirLabel);
         // 构建目录打开按钮
-        QPushButton *dirOpenBtn = new QPushButton(this);
+        QPushButton *dirOpenBtn = new QPushButton(dlg);
         dirOpenBtn->setText("打开目录");
-        dlg->addContent(dirOpenBtn);
+        contentLayout->addWidget(dirOpenBtn);
         connect(dirOpenBtn, &QPushButton::clicked, this, [this](bool checked) {
             Q_UNUSED(checked);
             QDesktopServices::openUrl(m_model->getPkgBuildDirPath());
         });
         // 确定按钮
-        dlg->addButton("确定", true);
+        QPushButton *okBtn = new QPushButton(dlg);
+        okBtn->setText("确定");
+        connect(okBtn, &QPushButton::clicked, dlg, &DDialog::close);
+        contentLayout->addWidget(okBtn);
 
         // 构建完成
-        connect(this->m_model, &AppManagerModel::buildPkgTaskFinished, dlg, [this, dlg](bool successed, const AM::AppInfo info) {
-            dlg->setEnabled(true);
+        connect(this->m_model, &AppManagerModel::buildPkgTaskFinished, dlg, [this, contentWidget, dlg](bool successed, const AM::AppInfo info) {
+            contentWidget->setEnabled(true);
             QString resultTitle;
             if (successed) {
                 resultTitle = QString("%1安装包构建成功").arg(m_showingAppInfo.pkgName);
@@ -385,7 +410,7 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
             dlg->setTitle(resultTitle);
         });
 
-        dlg->setEnabled(false);
+        contentWidget->setEnabled(false);
         dlg->exec();
         // 释放内存
         dlg->deleteLater();

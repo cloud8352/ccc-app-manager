@@ -979,10 +979,12 @@ bool AppManagerJob::buildPkg(const AppInfo &info)
     QDir pkgBuildCacheDir(m_pkgBuildCacheDirPath);
     if (pkgBuildCacheDir.exists()) {
         if (!pkgBuildCacheDir.removeRecursively()) {
+            qCritical() << Q_FUNC_INFO << m_pkgBuildCacheDirPath << "removeRecursively failed!";
             return false;
         }
     }
     if (!pkgBuildCacheDir.mkdir(m_pkgBuildCacheDirPath)) {
+        qCritical() << Q_FUNC_INFO << m_pkgBuildCacheDirPath << "create failed!";
         return false;
     }
 
