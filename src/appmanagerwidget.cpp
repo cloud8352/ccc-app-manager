@@ -10,6 +10,7 @@
 #include <DButtonBox>
 #include <DSpinner>
 #include <DDialog>
+#include <DFloatingButton>
 
 #include <QPushButton>
 #include <QLineEdit>
@@ -54,6 +55,7 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
     , m_infoBtn(nullptr)
     , m_filesBtn(nullptr)
     , m_infoSwitchBtn(nullptr)
+    , m_findLineEdit(nullptr)
     , m_appInfoTextEdit(nullptr)
     , m_appFileListTextEdit(nullptr)
 {
@@ -196,7 +198,12 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
     switchAreaTopSep->setFixedHeight(2);
     infoFrameLayout->addWidget(switchAreaTopSep);
 
+    // 信息头部布局
     infoFrameLayout->addSpacing(5);
+    QHBoxLayout *infoHeadLayout = new QHBoxLayout;
+    infoFrameLayout->addLayout(infoHeadLayout);
+
+    // 开关列表
     QList<DButtonBoxButton *> switchBtnList;
     m_infoBtn = new DButtonBoxButton("信息", this);
     m_infoBtn->setMinimumWidth(100);
@@ -208,9 +215,36 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
 
     m_infoSwitchBtn = new DButtonBox(this);
     m_infoSwitchBtn->setButtonList(switchBtnList, true);
-    infoFrameLayout->addWidget(m_infoSwitchBtn, 0, Qt::AlignLeft);
+    infoHeadLayout->addWidget(m_infoSwitchBtn, 0, Qt::AlignLeft);
+
+    // 打开内容搜索按钮
+    QPushButton *openFindToolBtn = new QPushButton(this);
+    openFindToolBtn->setText("查找内容");
+    infoHeadLayout->addWidget(openFindToolBtn, 0, Qt::AlignRight);
+    infoHeadLayout->addSpacing(5);
 
     // -------------- 信息展示区
+    // 查找工具
+    infoFrameLayout->addSpacing(3);
+    QHBoxLayout *findContentFrameLayout = new QHBoxLayout;
+    DFrame *findContentFrame = new DFrame(this);
+    findContentFrame->setLayout(findContentFrameLayout);
+    infoFrameLayout->addWidget(findContentFrame);
+    // 查找提示
+    QLabel *findContentLable = new QLabel(this);
+    findContentLable->setText("查找");
+    findContentFrameLayout->addWidget(findContentLable);
+    // 查找编辑栏
+    m_findLineEdit = new QLineEdit(this);
+    m_findLineEdit->setPlaceholderText("");
+    findContentFrameLayout->addWidget(m_findLineEdit);
+    // 取消搜索按钮
+    DFloatingButton *cancelSearchBtn = new DFloatingButton(this);
+    cancelSearchBtn->setIcon(DStyle::StandardPixmap::SP_CloseButton);
+    cancelSearchBtn->setFixedSize(30, 30);
+    cancelSearchBtn->setIconSize(QSize(30, 30));
+    findContentFrameLayout->addWidget(cancelSearchBtn);
+
     m_appInfoTextEdit = new QTextEdit(this);
     m_appInfoTextEdit->setLineWidth(0);
     m_appInfoTextEdit->setReadOnly(true);
@@ -330,6 +364,21 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
         }
     });
 
+    connect(openFindToolBtn, &QPushButton::clicked, this, [findContentFrame, openFindToolBtn] {
+        bool visibleNeedChange = !findContentFrame->isVisible();
+        findContentFrame->setVisible(visibleNeedChange);
+        openFindToolBtn->setDown(visibleNeedChange);
+    });
+
+    connect(m_findLineEdit, &QLineEdit::editingFinished, this, &AppManagerWidget::updateHighlightText);
+    connect(cancelSearchBtn, &DFloatingButton::clicked, this, [findContentFrame, openFindToolBtn, this] {
+        findContentFrame->setVisible(false);
+        openFindToolBtn->setDown(false);
+        // 清空文本搜索内容
+        m_findLineEdit->setText("");
+        this->updateHighlightText();
+    });
+
     // 卸载
     connect(uninstallBtn, &QPushButton::clicked, this, [this](bool) {
         this->m_model->notifyThreadUninstallPkg(m_showingAppInfo.pkgName);
@@ -433,6 +482,7 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
     connect(m_model, &AppManagerModel::appUninstalled, this, &AppManagerWidget::onAppUninstalled);
 
     // post init
+    findContentFrame->setVisible(false);
     setLoading(true);
 }
 
@@ -955,4 +1005,42 @@ void AppManagerWidget::updateAppCountLabel()
         }
     }
     m_appCountLabel->setText(QString("%1：共%2个").arg(showingTypeStr).arg(m_showingInfoList.size()));
+}
+
+void AppManagerWidget::updateHighlightText()
+{
+    QTextDocument *doc;
+    if (m_infoBtn->isChecked()) {
+        doc = m_appInfoTextEdit->document();
+    } else if (m_filesBtn->isChecked()) {
+        doc = m_appFileListTextEdit->document();
+    } else {
+        qWarning() << Q_FUNC_INFO << "no info content need find";
+        return;
+    }
+    QTextCursor cursor(doc);
+    // 重置全部文字格式
+    cursor.select(QTextCursor::SelectionType::Document);
+    cursor.setCharFormat(m_appInfoTextEdit->textCursor().charFormat());
+
+    QString findtext = m_findLineEdit->text(); //获得对话框的内容
+//    qInfo() << Q_FUNC_INFO << findtext;
+    if (findtext.isEmpty()) {
+        return;
+    }
+
+    QTextCursor highlightCursor(doc);
+    // 开始查找
+    cursor.beginEditBlock();
+    QTextCharFormat colorFormat(highlightCursor.charFormat());
+    colorFormat.setBackground(Qt::GlobalColor::red);
+    while (!highlightCursor.isNull() && !highlightCursor.atEnd()) {
+        highlightCursor = doc->find(findtext, highlightCursor);
+        if (!highlightCursor.isNull()) {
+            highlightCursor.mergeCharFormat(colorFormat);
+        }
+
+        qApp->processEvents();
+    }
+    cursor.endEditBlock();
 }

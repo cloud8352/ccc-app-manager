@@ -68,6 +68,8 @@ private:
     void updateItemFromAppInfo(QStandardItem *item, const AM::AppInfo &appInfo);
     // 更新应用个数标签
     void updateAppCountLabel();
+    // 更新高亮显示文字
+    void updateHighlightText();
 
 private:
     QList<AM::AppInfo> m_appInfoList;
@@ -98,6 +100,7 @@ private:
     DButtonBoxButton *m_infoBtn;
     DButtonBoxButton *m_filesBtn;
     DButtonBox *m_infoSwitchBtn;
+    QLineEdit *m_findLineEdit;
     QTextEdit *m_appInfoTextEdit;
     QTextEdit *m_appFileListTextEdit;
 };
