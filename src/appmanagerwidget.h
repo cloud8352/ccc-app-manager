@@ -7,6 +7,7 @@
 
 #include <QStandardItem>
 #include <QComboBox>
+#include <QTextCursor>
 
 class AppManagerModel;
 
@@ -70,6 +71,8 @@ private:
     void updateAppCountLabel();
     // 更新高亮显示文字
     void updateHighlightText();
+    // 移动到下一个高亮显示文字
+    void moveToNextHighlightText();
 
 private:
     QList<AM::AppInfo> m_appInfoList;
@@ -101,6 +104,8 @@ private:
     DButtonBoxButton *m_filesBtn;
     DButtonBox *m_infoSwitchBtn;
     QLineEdit *m_findLineEdit;
+    QList<QTextCursor> m_highlightCursorList;
+    QTextCursor m_currentMovedCursor;
     QTextEdit *m_appInfoTextEdit;
     QTextEdit *m_appFileListTextEdit;
 };

@@ -5,5 +5,7 @@
         <file>icons/ccc-app-manager_56px.svg</file>
         <file>icons/app-manager_bak_64px.svg</file>
         <file>icons/rotate_48px.svg</file>
+        <file>icons/chevron-down_48px.svg</file>
+        <file>icons/chevron-up_48px.svg</file>
     </qresource>
 </RCC>

@@ -33,6 +33,11 @@ Q_DECLARE_METATYPE(QMargins)
 const QMargins ListViewItemMargin(5, 3, 5, 3);
 const QVariant ListViewItemMarginVar = QVariant::fromValue(ListViewItemMargin);
 
+// 高亮文字背景颜色
+const QColor HighlightTextBgColor(255, 255, 0, 190);
+// 当前定位到的高亮文字背景颜色
+const QColor LocatedHighlightTextBgColor(0, 0, 255, 120);
+
 AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
     : QWidget(parent)
     , m_model(model)
@@ -238,11 +243,21 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
     m_findLineEdit = new QLineEdit(this);
     m_findLineEdit->setPlaceholderText("");
     findContentFrameLayout->addWidget(m_findLineEdit);
+    // 查找下一个按钮
+    DIconButton *findNextContentBtn = new DIconButton(this);
+    findNextContentBtn->setToolTip("查找下一个");
+    findNextContentBtn->setIcon(QIcon::fromTheme("chevron-down"));
+    findNextContentBtn->setFixedSize(30, 30);
+    findNextContentBtn->setIconSize(QSize(30, 30));
+    findNextContentBtn->setEnabledCircle(true);
+    findContentFrameLayout->addWidget(findNextContentBtn);
     // 取消搜索按钮
-    DFloatingButton *cancelSearchBtn = new DFloatingButton(this);
+    DIconButton *cancelSearchBtn = new DIconButton(this);
+    cancelSearchBtn->setToolTip("取消查找");
     cancelSearchBtn->setIcon(DStyle::StandardPixmap::SP_CloseButton);
     cancelSearchBtn->setFixedSize(30, 30);
     cancelSearchBtn->setIconSize(QSize(30, 30));
+    cancelSearchBtn->setEnabledCircle(true);
     findContentFrameLayout->addWidget(cancelSearchBtn);
 
     m_appInfoTextEdit = new QTextEdit(this);
@@ -371,7 +386,8 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
     });
 
     connect(m_findLineEdit, &QLineEdit::editingFinished, this, &AppManagerWidget::updateHighlightText);
-    connect(cancelSearchBtn, &DFloatingButton::clicked, this, [findContentFrame, openFindToolBtn, this] {
+    connect(findNextContentBtn, &DIconButton::clicked, this, &AppManagerWidget::moveToNextHighlightText);
+    connect(cancelSearchBtn, &DIconButton::clicked, this, [findContentFrame, openFindToolBtn, this] {
         findContentFrame->setVisible(false);
         openFindToolBtn->setDown(false);
         // 清空文本搜索内容
@@ -1009,6 +1025,10 @@ void AppManagerWidget::updateAppCountLabel()
 
 void AppManagerWidget::updateHighlightText()
 {
+    // 清空上次高亮指针列表
+    m_highlightCursorList.clear();
+    m_currentMovedCursor.clearSelection();
+    // 判断待搜索的文档
     QTextDocument *doc;
     if (m_infoBtn->isChecked()) {
         doc = m_appInfoTextEdit->document();
@@ -1033,14 +1053,81 @@ void AppManagerWidget::updateHighlightText()
     // 开始查找
     cursor.beginEditBlock();
     QTextCharFormat colorFormat(highlightCursor.charFormat());
-    colorFormat.setBackground(Qt::GlobalColor::red);
+    colorFormat.setBackground(HighlightTextBgColor);
     while (!highlightCursor.isNull() && !highlightCursor.atEnd()) {
         highlightCursor = doc->find(findtext, highlightCursor);
         if (!highlightCursor.isNull()) {
             highlightCursor.mergeCharFormat(colorFormat);
+            m_highlightCursorList.append(highlightCursor);
         }
 
         qApp->processEvents();
     }
     cursor.endEditBlock();
+}
+
+void AppManagerWidget::moveToNextHighlightText()
+{
+    if (m_highlightCursorList.isEmpty()) {
+        qInfo() << Q_FUNC_INFO << "highlight text is empty";
+        return;
+    }
+
+    // 判断待搜索的文档编辑器
+    QTextEdit *edit;
+    if (m_infoBtn->isChecked()) {
+        edit = m_appInfoTextEdit;
+    } else if (m_filesBtn->isChecked()) {
+        edit = m_appFileListTextEdit;
+    } else {
+        qWarning() << Q_FUNC_INFO << "no info content need find";
+        return;
+    }
+
+    QTextCursor nextHighlightCursor;
+    int currentCursorAnchor = edit->textCursor().anchor();
+//    qInfo() << Q_FUNC_INFO << "currentCursorAnchor" << currentCursorAnchor;
+    for (QList<QTextCursor>::const_iterator cIter = m_highlightCursorList.cbegin();
+         cIter != m_highlightCursorList.cend(); ++cIter) {
+        if (currentCursorAnchor < cIter->anchor()) {
+            nextHighlightCursor = *cIter;
+            break;
+        }
+    }
+    if (nextHighlightCursor.isNull()) {
+        nextHighlightCursor = m_highlightCursorList.first();
+    }
+    int nextHighlightCursorAnchor = nextHighlightCursor.anchor();
+//    qInfo() << Q_FUNC_INFO << "nextHighlightCursorAnchor" << nextHighlightCursorAnchor;
+
+    bool finded = true; // 是否找到
+    bool haveLoopFinded = false; // 只循环查找一次
+    edit->moveCursor(QTextCursor::MoveOperation::PreviousCharacter, QTextCursor::MoveMode::MoveAnchor);
+    while (edit->textCursor().anchor() != nextHighlightCursorAnchor) {
+        edit->moveCursor(QTextCursor::MoveOperation::NextCharacter, QTextCursor::MoveMode::MoveAnchor);
+        // 当移到文档末尾时还没找到高亮文字指针
+        if (edit->textCursor().atEnd()) {
+            if (!haveLoopFinded) {
+                QTextCursor currentCursor = edit->textCursor();
+                currentCursor.movePosition(QTextCursor::MoveOperation::Start, QTextCursor::MoveMode::MoveAnchor);
+                edit->setTextCursor(currentCursor);
+                haveLoopFinded = true;
+                 qInfo() << Q_FUNC_INFO << "move to start" << edit->textCursor().anchor();
+            } else {
+                finded = false;
+                break;
+            }
+        }
+    }
+
+    // 还原上次移到到的高亮文字背景颜色
+    QTextCharFormat colorFormat(m_currentMovedCursor.charFormat());
+    colorFormat.setBackground(HighlightTextBgColor);
+    m_currentMovedCursor.setCharFormat(colorFormat);
+
+    // 设置当前移到到的高亮文字背景颜色
+    m_currentMovedCursor = nextHighlightCursor;
+    colorFormat = m_currentMovedCursor.charFormat();
+    colorFormat.setBackground(LocatedHighlightTextBgColor);
+    m_currentMovedCursor.mergeCharFormat(colorFormat);
 }
