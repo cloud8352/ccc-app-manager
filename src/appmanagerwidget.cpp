@@ -185,7 +185,8 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
     // 是否保持版本
     m_holdVerComboBox = new QComboBox(this);
     m_holdVerComboBox->setToolTip("保持版本：不随系统更新而更新，dpkg --get-selections查询该安装包状态为hold\n"
-                                "不保持版本：会随系统更新而更新，dpkg --get-selections查询该安装包状态为install");
+                                "不保持版本：会随系统更新而更新，dpkg --get-selections查询该安装包状态为install\n"
+                                  "【注意】请谨慎将系统组件保持版本，因为系统组件往往与系统环境强绑定，新版本系统很可能与老版本系统组件不兼容，如dde-session-shell");
     m_holdVerComboBox->setEditable(false);
     m_holdVerComboBox->insertItems(0, {"保持版本", "不保持版本"});
     m_holdVerComboBox->setCurrentIndex(1);
