@@ -15,28 +15,6 @@
 #include <zlib.h>
 #include <aio.h> // async I/O
 
-int zlibCompress(char *dest, int &destLen,
-                 char *source, int sourceLen)
-{
-    unsigned char *dest1 = reinterpret_cast<unsigned char *>(dest);
-    unsigned long destLen1 = static_cast<unsigned long>(destLen);
-    unsigned char *source1 = reinterpret_cast<unsigned char *>(source);
-    unsigned long sourceLen1 = static_cast<unsigned long>(sourceLen);
-
-    return (compress(dest1, &destLen1, source1, sourceLen1));
-}
-
-int zlibUncompress(char *dest, int &destLen,
-                   char *source, int sourceLen)
-{
-    unsigned char *dest1 = reinterpret_cast<unsigned char *>(dest);
-    unsigned long destLen1 = static_cast<unsigned long>(destLen);
-    unsigned char *source1 = reinterpret_cast<unsigned char *>(source);
-    unsigned long sourceLen1 = static_cast<unsigned long>(sourceLen);
-
-    return (uncompress(dest1, &destLen1, source1, sourceLen1));
-}
-
 enum ComPressError {
     Ok = 0,
     Fail = -1

@@ -518,7 +518,8 @@ void AppManagerWidget::showAppInfo(const AppInfo &info)
         }
 
         // 根据版本找到候选包中对应的包大小和下载地址
-        if (m_showingAppInfo.installedPkgInfo.version == srvPkgInfo.version) {
+        if (m_showingAppInfo.installedPkgInfo.version == srvPkgInfo.version
+                && m_showingAppInfo.installedPkgInfo.arch == srvPkgInfo.arch) {
             m_showingAppInfo.installedPkgInfo.pkgSize = srvPkgInfo.pkgSize;
             m_showingAppInfo.installedPkgInfo.downloadUrl = srvPkgInfo.downloadUrl;
         }
