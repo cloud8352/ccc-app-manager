@@ -616,7 +616,6 @@ bool AppManagerJob::getPkgInfoListFromFile(QList<PkgInfo> &pkgInfoList, const QS
                 continue;
             }
 
-
             if (lineText.startsWith("Description: ")) {
                 pkgInfo.description = lineText.split(": ").last();
                 pkgInfo.description.append("\n");
@@ -636,6 +635,7 @@ bool AppManagerJob::getPkgInfoListFromFile(QList<PkgInfo> &pkgInfoList, const QS
             if (lineText.isEmpty()) {
                 pkgInfo.infosFilePath = pkgInfosFilePath;
                 pkgInfo.depositoryUrl = depositoryUrlStr;
+                pkgInfo.updatedTime = getPkgUpdatedTime(pkgInfo.pkgName, pkgInfo.arch);
                 pkgInfoList.append(pkgInfo);
                 pkgInfo = {};
             }
@@ -739,6 +739,7 @@ bool AppManagerJob::getInstalledPkgInfo(PkgInfo &pkgInfo, const QString &pkgName
         // 检测到下一包信息
         if (lineText.isEmpty()) {
             pkgInfo.infosFilePath = localPkgInfosFilePath;
+            pkgInfo.updatedTime = getPkgUpdatedTime(pkgInfo.pkgName, pkgInfo.arch);
             if (pkgName == pkgInfo.pkgName) {
                 if (pkgInfo.isInstalled) {
                     break;
@@ -913,6 +914,21 @@ DesktopInfo AppManagerJob::getDesktopInfo(const QString &desktop)
     readIniSettingMethod.endGroup();
 
     return desktopInfo;
+}
+
+QString AppManagerJob::getPkgUpdatedTime(const QString &pkgName, const QString &arch)
+{
+    // 判断文件名中是否有架构名
+    QString listFilePath = QString("/var/lib/dpkg/info/%1.list").arg(pkgName);
+    QString archContent = QFile::exists(listFilePath) ? "" : QString(":%1").arg(arch);
+
+    QFileInfo fInfo(QString("/var/lib/dpkg/info/%1%2.list").arg(pkgName).arg(archContent));
+    if (!fInfo.exists()) {
+        qInfo() << Q_FUNC_INFO << fInfo.fileName() << "not exists!";
+        return "";
+    }
+
+    return fInfo.lastModified().toString(DATE_TIME_FORMAT_STR);
 }
 
 qint64 AppManagerJob::getUrlFileSize(QString &url, int tryTimes)

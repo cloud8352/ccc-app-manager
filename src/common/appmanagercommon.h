@@ -16,6 +16,9 @@
 #define GB_COUNT (1 << 30)
 #define TB_COUNT (long(1) << 40)
 
+// 时间格式化字符串
+#define DATE_TIME_FORMAT_STR "yyyy-MM-dd HH:mm:ss.zzz"
+
 namespace AM {
 // 运行状态
 enum RunningStatus {
