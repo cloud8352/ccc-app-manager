@@ -550,7 +550,7 @@ bool AppManagerJob::getPkgInfoListFromFile(QList<PkgInfo> &pkgInfoList, const QS
             }
 
             if (lineText.startsWith("Status: ")) {
-                pkgInfo.isInstalled = lineText.contains("installed");
+                pkgInfo.isInstalled = judgePkgIsInstalledFromStr(lineText);
                 continue;
             }
 
@@ -576,7 +576,7 @@ bool AppManagerJob::getPkgInfoListFromFile(QList<PkgInfo> &pkgInfoList, const QS
             }
 
             if (lineText.startsWith("Status: ")) {
-                pkgInfo.isInstalled = lineText.contains("installed");
+                pkgInfo.isInstalled = judgePkgIsInstalledFromStr(lineText);
                 pkgInfo.isHoldVersion = lineText.contains("hold");
                 continue;
             }
@@ -681,7 +681,7 @@ bool AppManagerJob::getInstalledPkgInfo(PkgInfo &pkgInfo, const QString &pkgName
         }
 
         if (lineText.startsWith("Status: ")) {
-            pkgInfo.isInstalled = lineText.contains("installed");
+            pkgInfo.isInstalled = judgePkgIsInstalledFromStr(lineText);
             pkgInfo.isHoldVersion = lineText.contains("hold");
             continue;
         }

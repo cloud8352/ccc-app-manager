@@ -171,7 +171,7 @@ QSet<QString> PkgMonitor::getCurrentInstalledPkgNameSet() const
         }
 
         if (lineText.startsWith("Status: ")) {
-            isInstalled = lineText.contains("installed");
+            isInstalled = AM::judgePkgIsInstalledFromStr(lineText);
             continue;
         }
 

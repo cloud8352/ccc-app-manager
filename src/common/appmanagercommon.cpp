@@ -70,3 +70,8 @@ QString AM::formatBytes(qint64 input, int prec)
     }
     return flowValueStr;
 }
+
+bool AM::judgePkgIsInstalledFromStr(const QString &str)
+{
+    return str.contains("installed") && !str.contains("not-installed");
+}

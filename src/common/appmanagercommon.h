@@ -99,4 +99,6 @@ PinyinInfo getPinYinInfoFromStr(const QString &words);
 void popupNormalSysNotify(const QString &summary, const QString &body);
 // 格式化容量
 QString formatBytes(qint64 input, int prec);
+// 从状态字符串中判断包是否已安装
+bool judgePkgIsInstalledFromStr(const QString &str);
 } // namespace AM

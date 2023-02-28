@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../common/appmanagercommon.h"
+
 #include <QObject>
 #include <QFileSystemWatcher>
 #include <QSet>
