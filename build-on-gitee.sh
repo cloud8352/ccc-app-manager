@@ -1,6 +1,7 @@
-echo "deb https://mirrors.huaweicloud.com/debian/ buster main contrib non-free" > /etc/apt/sources.list
 # 换源
-apt update
+echo "换源"
+echo "deb https://mirrors.huaweicloud.com/debian/ buster main contrib non-free" > /etc/apt/sources.list
+apt-get update
 export DEBIAN_FRONTEND=noninteractive
 echo "安装依赖..."
 apt-get install libgsettings-qt-dev -y 

@@ -26,16 +26,21 @@ stages:
         displayName: Dtk build
         nodeVersion: 17.8.0
         commands:
-          - git clone https://gitlink.org.cn/shenmo7192/debian-10-container.git
-          - mv debian-10-container/Debian-10.tar.xz /mnt
-          - rm -rf debian-10-container
+          - pwd
           - WORK_DIR=`pwd`
+          - echo "获取Debian 10环境"
           - cd /mnt/
-          - tar -xf Debian-10.tar.xz
-          - cd Debian-10
-          - cp -r $WORK_DIR gitee-go-build
+          - git clone https://gitee.com/ct243768648/debian-10-container.git
+          - tar -xf debian-10-container/Debian-10_part1.tar
+          - tar -xf debian-10-container/Debian-10_part2.tar
+          - tar -xf debian-10-container/Debian-10_part3.tar
+          - rm -rf debian-10-container
+          - echo "将代码拷贝到 Debian 10 环境根目录"
+          - cp -r $WORK_DIR Debian-10/gitee-go-build
           - wget https://gitee.com/ct243768648/ccc-app-manager/raw/main/build-on-gitee.sh
-          - chmod +x build-on-gitee.sh
+          - mv build-on-gitee.sh Debian-10
+          - chmod +x Debian-10/build-on-gitee.sh
+          - ls Debian-10
           - echo "进入Debian 10环境"
           - chroot /mnt/Debian-10 /bin/bash /build-on-gitee.sh
         artifacts:
