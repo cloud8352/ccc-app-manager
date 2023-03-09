@@ -90,8 +90,11 @@ void AppManagerModel::openStoreAppDetailPage(const QString &pkgName)
 
 void AppManagerModel::openSpkStoreAppDetailPage(const QString &pkgName)
 {
-    Q_UNUSED(pkgName);
-    popupNormalSysNotify("shenmo", "因为无法获取分类信息，暂时没有实现这个功能");
+    QProcess proc;
+    proc.startDetached("spark-store", {QString("spk://search/%1").arg(pkgName)});
+    proc.waitForStarted();
+    proc.waitForFinished();
+    proc.close();
 }
 
 QString AppManagerModel::getDownloadDirPath() const

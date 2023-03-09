@@ -290,8 +290,20 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
     firstLineBottomLayout->addWidget(uninstallBtn);
 
     firstLineBottomLayout->addSpacing(10);
-    QPushButton *gotoAppStoreBtn = new QPushButton("在深度应用商店中查看", this);
-    gotoAppStoreBtn->setMaximumWidth(170);
+    // 跳转到应用商店菜单
+    QAction *gotoDeepinAppStoreAction = new QAction("深度", this);
+    gotoDeepinAppStoreAction->setIcon(QIcon::fromTheme("distributor-logo-deepin"));
+    gotoDeepinAppStoreAction->setCheckable(false);
+    QAction *gotoSparkAppStoreAction = new QAction("星火", this);
+    gotoSparkAppStoreAction->setIcon(QIcon::fromTheme("spark-store"));
+    gotoSparkAppStoreAction->setCheckable(false);
+    QMenu *gotoAppStoreBtnMenu = new QMenu(this);
+    gotoAppStoreBtnMenu->addAction(gotoDeepinAppStoreAction);
+    gotoAppStoreBtnMenu->addAction(gotoSparkAppStoreAction);
+    // 跳转到应用商店按钮
+    QPushButton *gotoAppStoreBtn = new QPushButton("在应用商店中查看", this);
+    gotoAppStoreBtn->setMenu(gotoAppStoreBtnMenu);
+    gotoAppStoreBtn->setMaximumWidth(190);
     firstLineBottomLayout->addWidget(gotoAppStoreBtn);
 
     firstLineBottomLayout->addSpacing(10);
@@ -303,12 +315,6 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
     QPushButton *getPkgFromLocalBtn = new QPushButton("离线获取安装包", this);
     getPkgFromLocalBtn->setMaximumWidth(170);
     firstLineBottomLayout->addWidget(getPkgFromLocalBtn);
-    firstLineBottomLayout->addSpacing(10);
-
-    firstLineBottomLayout->addSpacing(10);
-    QPushButton *gotoSpkAppStoreBtn = new QPushButton("在星火应用商店中查看", this);
-    gotoSpkAppStoreBtn->setMaximumWidth(170);
-    firstLineBottomLayout->addWidget(gotoSpkAppStoreBtn);
     firstLineBottomLayout->addSpacing(10);
 
     // 左置顶
@@ -401,13 +407,13 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
         this->m_model->notifyThreadUninstallPkg(m_showingAppInfo.pkgName);
     });
 
-    // 跳转到深度商店
-    connect(gotoAppStoreBtn, &QPushButton::clicked, this, [this](bool) {
-        this->m_model->openStoreAppDetailPage(m_showingAppInfo.pkgName);
-    });
-    //跳转到星火商店
-    connect(gotoSpkAppStoreBtn, &QPushButton::clicked, this, [this](bool) {
-        this->m_model->openSpkStoreAppDetailPage(m_showingAppInfo.pkgName);
+    // 跳转到应用商店
+    connect(gotoAppStoreBtnMenu, &QMenu::triggered, this, [gotoDeepinAppStoreAction, gotoSparkAppStoreAction, this](QAction *action) {
+        if (action == gotoDeepinAppStoreAction) {
+            this->m_model->openStoreAppDetailPage(m_showingAppInfo.pkgName);
+        } else if (action == gotoSparkAppStoreAction) {
+            this->m_model->openSpkStoreAppDetailPage(m_showingAppInfo.pkgName);
+        }
     });
 
     // 在线获取安装包
