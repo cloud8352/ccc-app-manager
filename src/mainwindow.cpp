@@ -137,7 +137,7 @@ MainWindow::MainWindow(QWidget *parent)
             dlg.addButton("是", true, DDialog::ButtonType::ButtonRecommend);
             int ret = dlg.exec();
             if (1 == ret) {
-                Q_EMIT m_appManagerModel->notifyThreadInstallProcInfoPlugin();
+                m_appManagerModel->openSpkStoreAppDetailPage(PROC_INFO_PLUGIN_PKG_NAME);
             }
         }
     });

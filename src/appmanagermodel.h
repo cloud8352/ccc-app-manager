@@ -60,8 +60,6 @@ Q_SIGNALS:
     void notifyThreadInstallOhMyDDE();
     // 安装oh-my-dde完成
     void installOhMyDDEFinished(bool successed, const QString &err);
-    // 通知安装proc-info-plugin
-    void notifyThreadInstallProcInfoPlugin();
     // 安装proc-info-plugin完成
     void installProcInfoPluginFinished(bool successed, const QString &err);
     // 软件安装变动

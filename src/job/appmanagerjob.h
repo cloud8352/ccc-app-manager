@@ -15,10 +15,9 @@ class QStandardItemModel;
 QT_END_NAMESPACE
 
 #define OH_MY_DDE_PKG_NAME "top.yzzi.youjian"
-#define PROC_INFO_PLUGIN_PKG_NAME "com.github.proc-info-plugin"
+#define PROC_INFO_PLUGIN_PKG_NAME "com.github.ccc-proc-info-plugin"
 // 本地安装包路径
 #define OH_MY_DDE_LOCAL_PKG_PATH "/opt/apps/com.github.ccc-app-manager/files/pkg/top.yzzi.youjian_1.0.3_amd64.deb"
-#define PROC_INFO_PLUGIN_LOCAL_PKG_PATH "/opt/apps/com.github.ccc-app-manager/files/pkg/com.github.proc-info-plugin_0.0.1_amd64.deb"
 
 using namespace AM;
 
@@ -54,7 +53,6 @@ public Q_SLOTS:
 
     void uninstallPkg(const QString &pkgName);
     void installOhMyDDE();
-    void installProcInfoPlugin();
 
     // 保持软件包版本
     void holdPkgVersion(const QString &pkgName, bool hold);

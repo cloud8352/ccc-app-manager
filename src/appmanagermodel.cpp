@@ -293,8 +293,6 @@ void AppManagerModel::initConnection()
     connect(this, &AppManagerModel::notifyThreadInstallOhMyDDE, m_appManagerJob, &AppManagerJob::installOhMyDDE);
     // 安装oh-my-dde完成
     connect(m_appManagerJob, &AppManagerJob::installOhMyDDEFinished, this, &AppManagerModel::installOhMyDDEFinished);
-    // 通知安装proc-info-plugin
-    connect(this, &AppManagerModel::notifyThreadInstallProcInfoPlugin, m_appManagerJob, &AppManagerJob::installProcInfoPlugin);
     // 安装proc-info-plugin完成
     connect(m_appManagerJob, &AppManagerJob::installProcInfoPluginFinished, this, &AppManagerModel::installProcInfoPluginFinished);
 

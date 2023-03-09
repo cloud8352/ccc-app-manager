@@ -373,15 +373,6 @@ void AppManagerJob::installOhMyDDE()
     setRunningStatus(Normal);
 }
 
-void AppManagerJob::installProcInfoPlugin()
-{
-    setRunningStatus(Busy);
-    QString err;
-    bool successed = installLocalPkg(PROC_INFO_PLUGIN_LOCAL_PKG_PATH, err);
-    Q_EMIT installProcInfoPluginFinished(successed, err);
-    setRunningStatus(Normal);
-}
-
 void AppManagerJob::holdPkgVersion(const QString &pkgName, bool hold)
 {
     const QString &options = QString("echo %1 %2 | sudo dpkg --set-selections")
