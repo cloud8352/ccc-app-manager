@@ -71,7 +71,15 @@ QList<AppInfo> AppManagerModel::getSearchedAppInfoList() const
 void AppManagerModel::openStoreAppDetailPage(const QString &pkgName)
 {
     QProcess proc;
-    QString cmd = QString("qdbus com.home.appstore.client "
+    QString cmd;
+    cmd = QString("qdbus com.home.appstore.client "
+                  "/com/home/appstore/client "
+                  "com.home.appstore.client.newInstence");
+    proc.start(cmd);
+    proc.waitForStarted();
+    proc.waitForFinished();
+
+    cmd = QString("qdbus com.home.appstore.client "
                           "/com/home/appstore/client "
                           "com.home.appstore.client.openBusinessUri "
                           "\"app_detail_info/%1\"")
@@ -80,12 +88,6 @@ void AppManagerModel::openStoreAppDetailPage(const QString &pkgName)
     proc.waitForStarted();
     proc.waitForFinished();
 
-    cmd = QString("qdbus com.home.appstore.client "
-                  "/com/home/appstore/client "
-                  "com.home.appstore.client.newInstence");
-    proc.start(cmd);
-    proc.waitForStarted();
-    proc.waitForFinished();
 }
 
 void AppManagerModel::openSpkStoreAppDetailPage(const QString &pkgName)
