@@ -24,6 +24,7 @@ protected:
 private Q_SLOTS:
     // 安装包安装完成时
     void onPkgInstallFinished(bool successed, const QString &err);
+    void openSparkStoreNeedBeInstallDlg();
 
 private:
     void updateUIByRunningStatus();

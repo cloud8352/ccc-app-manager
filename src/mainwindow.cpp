@@ -6,6 +6,7 @@
 #include <DApplicationHelper>
 #include <DSysInfo>
 #include <DDialog>
+#include <QLabel>
 
 #include <QTextEdit>
 #include <QProcess>
@@ -22,7 +23,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     setMinimumSize(500, 300);
     QRect primaryScreenGeometry = qApp->primaryScreen()->geometry();
-    int resizedWidth = int(primaryScreenGeometry.width() * 0.7);
+    int resizedWidth = int(primaryScreenGeometry.width() * 0.65);
     int resizedHeight = int(resizedWidth * 3 / 5);
     resize(resizedWidth, resizedHeight);
     // 设置背景
@@ -149,7 +150,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 安装完成时
     connect(m_appManagerModel, &AppManagerModel::installOhMyDDEFinished, this, &MainWindow::onPkgInstallFinished);
-    connect(m_appManagerModel, &AppManagerModel::installProcInfoPluginFinished, this, &MainWindow::onPkgInstallFinished);
+    connect(m_appManagerModel, &AppManagerModel::notifyOpenSparkStoreNeedBeInstallDlg,
+            this, &MainWindow::openSparkStoreNeedBeInstallDlg);
 
     // 下载失败
     connect(m_appManagerModel, &AppManagerModel::pkgFileDownloadFailed, this, [this](const PkgInfo &info) {
@@ -208,6 +210,31 @@ void MainWindow::onPkgInstallFinished(bool successed, const QString &err)
     errEdit->setText(err);
     errEdit->setReadOnly(true);
     dlg->addContent(errEdit);
+
+    dlg->exec();
+    dlg->deleteLater();
+}
+
+void MainWindow::openSparkStoreNeedBeInstallDlg()
+{
+    DDialog *dlg = new DDialog(this);
+    dlg->setIcon(QIcon::fromTheme("dialog-warning"));
+
+    QLabel *tipLabel = new QLabel(dlg);
+    tipLabel->setWordWrap(true);
+    tipLabel->setOpenExternalLinks(true);
+    tipLabel->setText("本功能需要使用星火应用商店，请前往下面的网址下载安装星火应用商店后，再重试此功能");
+    dlg->addContent(tipLabel);
+
+    //超链接标签
+    QLabel *linkLabel = new QLabel(dlg);
+    linkLabel->setWordWrap(true);
+    linkLabel->setOpenExternalLinks(true);//设置点击连接自动打开（（跳转到浏览器）
+    linkLabel->setTextInteractionFlags(Qt::TextInteractionFlag::TextBrowserInteraction);
+    const QString websiteLink = "https://gitee.com/deepin-community-store/spark-store/releases";
+    QString text = QString("<a href=\"%1\">%2</a>").arg(websiteLink).arg(websiteLink);
+    linkLabel->setText(text);
+    dlg->addContent(linkLabel);
 
     dlg->exec();
     dlg->deleteLater();

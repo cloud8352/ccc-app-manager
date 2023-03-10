@@ -78,7 +78,6 @@ Q_SIGNALS:
     // 构建安装包任务完成
     void buildPkgTaskFinished(bool successed, const AM::AppInfo &info);
     void installOhMyDDEFinished(bool successed, const QString &err);
-    void installProcInfoPluginFinished(bool successed, const QString &err);
     // 软件安装变动
     void appInstalled(const AM::AppInfo &appInfo);
     void appUpdated(const AM::AppInfo &appInfo);

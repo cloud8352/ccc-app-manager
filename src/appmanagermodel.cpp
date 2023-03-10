@@ -92,6 +92,11 @@ void AppManagerModel::openStoreAppDetailPage(const QString &pkgName)
 
 void AppManagerModel::openSpkStoreAppDetailPage(const QString &pkgName)
 {
+    if (isPkgInstalled("spark-store")) {
+        Q_EMIT notifyOpenSparkStoreNeedBeInstallDlg();
+        return;
+    }
+
     QProcess proc;
     proc.startDetached("spark-store", {QString("spk://search/%1").arg(pkgName)});
     proc.waitForStarted();
@@ -295,8 +300,6 @@ void AppManagerModel::initConnection()
     connect(this, &AppManagerModel::notifyThreadInstallOhMyDDE, m_appManagerJob, &AppManagerJob::installOhMyDDE);
     // 安装oh-my-dde完成
     connect(m_appManagerJob, &AppManagerJob::installOhMyDDEFinished, this, &AppManagerModel::installOhMyDDEFinished);
-    // 安装proc-info-plugin完成
-    connect(m_appManagerJob, &AppManagerJob::installProcInfoPluginFinished, this, &AppManagerModel::installProcInfoPluginFinished);
 
     // 包安装变动
     connect(m_appManagerJob, &AppManagerJob::appInstalled, this, &AppManagerModel::onAppInstalled);

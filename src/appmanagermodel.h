@@ -60,8 +60,8 @@ Q_SIGNALS:
     void notifyThreadInstallOhMyDDE();
     // 安装oh-my-dde完成
     void installOhMyDDEFinished(bool successed, const QString &err);
-    // 安装proc-info-plugin完成
-    void installProcInfoPluginFinished(bool successed, const QString &err);
+    // 通知打开星火应用商店需要安装对话框
+    void notifyOpenSparkStoreNeedBeInstallDlg();
     // 软件安装变动
     void appInstalled(const AM::AppInfo &appInfo);
     void appUpdated(const AM::AppInfo &appInfo);

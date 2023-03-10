@@ -425,7 +425,7 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
     // 离线获取安装包
     connect(getPkgFromLocalBtn, &QPushButton::clicked, this, [this](bool) {
         // 确认窗口
-        DDialog confirmDlg;
+        DDialog confirmDlg(this);
         confirmDlg.setMessage("是否开始离线获取安装包？");
 
         // 取消按钮
