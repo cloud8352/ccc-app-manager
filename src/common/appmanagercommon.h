@@ -2,6 +2,8 @@
 
 #include <DStyleOption>
 
+#include <QGSettings/QGSettings>
+
 #define ONLY_SHOW_IN_VALUE_DEEPIN "Deepin"
 #define X_DEEPIN_VENDOR_STR "deepin"
 // 应用默认图标
@@ -101,4 +103,6 @@ void popupNormalSysNotify(const QString &summary, const QString &body);
 QString formatBytes(qint64 input, int prec);
 // 从状态字符串中判断包是否已安装
 bool judgePkgIsInstalledFromStr(const QString &str);
+// 判断GSettings中是否包含指定键
+bool isQGSettingsContainsKey(const QGSettings &settings, const QString &key);
 } // namespace AM

@@ -6,11 +6,12 @@
 #include <DApplicationHelper>
 #include <DSysInfo>
 #include <DDialog>
+
 #include <QTextEdit>
 #include <QProcess>
-
 #include <QHBoxLayout>
 #include <QGSettings/QGSettings>
+#include <QScreen>
 
 MainWindow::MainWindow(QWidget *parent)
     : DMainWindow(parent)
@@ -20,7 +21,10 @@ MainWindow::MainWindow(QWidget *parent)
     , m_appManagerWidget(nullptr)
 {
     setMinimumSize(500, 300);
-    resize(1000, 600);
+    QRect primaryScreenGeometry = qApp->primaryScreen()->geometry();
+    int resizedWidth = int(primaryScreenGeometry.width() * 0.7);
+    int resizedHeight = int(resizedWidth * 3 / 5);
+    resize(resizedWidth, resizedHeight);
     // 设置背景
     setTitlebarShadowEnabled(false);
     setFocusPolicy(Qt::FocusPolicy::ClickFocus);
@@ -58,7 +62,7 @@ MainWindow::MainWindow(QWidget *parent)
     int dtkWindowRadius = 8;
     if (QGSettings::isSchemaInstalled("com.deepin.xsettings")) {
         QGSettings deepinSettings("com.deepin.xsettings");
-        if (deepinSettings.keys().contains("dtk-window-radius")) {
+        if (AM::isQGSettingsContainsKey(deepinSettings, "dtk-window-radius")) {
             dtkWindowRadius = deepinSettings.get("dtk-window-radius").toInt();
         }
     }

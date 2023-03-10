@@ -104,3 +104,18 @@ bool AM::judgePkgIsInstalledFromStr(const QString &str)
 {
     return str.contains("installed") && !str.contains("not-installed");
 }
+
+bool AM::isQGSettingsContainsKey(const QGSettings &settings, const QString &key)
+{
+    const QString simplyfiedKey = QString(key).toLower().remove(".").remove("-").remove("_");
+    const QStringList keys = settings.keys();
+    for (QStringList::const_iterator cIter = keys.begin(); cIter != keys.end(); ++cIter) {
+        QString originKey = *cIter;
+        originKey = originKey.toLower().remove(".").remove("-").remove("_");
+        if (originKey == simplyfiedKey) {
+            return true;
+        }
+    }
+
+    return false;
+}
