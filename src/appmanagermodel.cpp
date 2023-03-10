@@ -92,7 +92,7 @@ void AppManagerModel::openStoreAppDetailPage(const QString &pkgName)
 
 void AppManagerModel::openSpkStoreAppDetailPage(const QString &pkgName)
 {
-    if (isPkgInstalled("spark-store")) {
+    if (!isPkgInstalled("spark-store")) {
         Q_EMIT notifyOpenSparkStoreNeedBeInstallDlg();
         return;
     }

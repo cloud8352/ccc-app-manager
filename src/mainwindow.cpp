@@ -231,7 +231,7 @@ void MainWindow::openSparkStoreNeedBeInstallDlg()
     linkLabel->setWordWrap(true);
     linkLabel->setOpenExternalLinks(true);//设置点击连接自动打开（（跳转到浏览器）
     linkLabel->setTextInteractionFlags(Qt::TextInteractionFlag::TextBrowserInteraction);
-    const QString websiteLink = "https://gitee.com/deepin-community-store/spark-store/releases";
+    const QString websiteLink = "https://gitee.com/deepin-community-store/spark-store/releases/latest";
     QString text = QString("<a href=\"%1\">%2</a>").arg(websiteLink).arg(websiteLink);
     linkLabel->setText(text);
     dlg->addContent(linkLabel);
