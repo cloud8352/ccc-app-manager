@@ -19,6 +19,9 @@ QT_END_NAMESPACE
 // 本地安装包路径
 #define OH_MY_DDE_LOCAL_PKG_PATH "/opt/apps/com.github.ccc-app-manager/files/pkg/top.yzzi.youjian_1.0.3_amd64.deb"
 
+// 连同依赖一起构建deb包时忽略的依赖包名列表
+const QStringList IgnoredDependPkgNameListOfPkgBuildWithDepends = {"libgl1-mesa-dri"};
+
 using namespace AM;
 
 class AppManagerJob : public QObject
@@ -109,14 +112,16 @@ private:
     qint64 getUrlFileSize(QString &url, int tryTimes = 3);
 
     // 构建安装包任务
-    bool buildPkg(const AM::AppInfo &info);
+    bool buildPkg(const AM::PkgInfo &pkgInfo, bool withDepends = false);
     // 安全本地软件包
     bool installLocalPkg(const QString &path, QString &err);
+    QStringList getPkgDepends(QStringList &findedPkgNameList, const QString &pkgName);
 
 private:
     QMutex m_mutex;
     RunningStatus m_runningStatus;
     QList<QString> m_sourceUrlList;
+    QString m_currentCpuArchStr;
     bool m_isOnlyLoadCurrentArchAppInfos;
     QMap<QString, AM::AppInfo> m_appInfosMap;
 

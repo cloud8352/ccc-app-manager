@@ -66,6 +66,163 @@ ComPressError zlibUnCompress(const char *srcName, const char *destName)
     return re;
 }
 
+bool readKeyValueFile(QIODevice &device, QSettings::SettingsMap &map)
+{
+    QString content = device.readAll();
+
+    QStringList lineStrList = content.split("\n");
+    QString group;
+    for (const QString &lineStr : lineStrList) {
+        if (lineStr.startsWith("#")) {
+            continue;
+        }
+
+        if (lineStr.startsWith("[") && lineStr.endsWith("]")) {
+            group = lineStr.mid(1, lineStr.size() -2);
+            continue;
+        }
+
+        QStringList keyValueStrList = lineStr.split("=");
+        if (2 > keyValueStrList.size()) {
+            continue;
+        }
+
+        QString key = keyValueStrList.first();
+        keyValueStrList.removeFirst();
+        QString value = keyValueStrList.join("=");
+        map.insert(group + "/" + key, value);
+    }
+    return true;
+}
+
+bool writeKeyValueFile(QIODevice &device, const QSettings::SettingsMap &map)
+{
+    QStringList groupList;
+    for (QSettings::SettingsMap::const_iterator cIter = map.begin();
+         cIter != map.end(); ++cIter) {
+        QString group = cIter.key().split("/").first();
+        if (!groupList.contains(group)) {
+            groupList.append(group);
+        }
+    }
+
+    QStringList newLineStrList;
+    for (const QString &group : groupList) {
+        newLineStrList.append(QString("[%1]").arg(group));
+        for (QSettings::SettingsMap::const_iterator cIter = map.begin();
+             cIter != map.end(); ++cIter) {
+            QString keyGroup = cIter.key().split("/").first();
+            if (keyGroup != group) {
+                continue;
+            }
+            QString key = cIter.key();
+            key.remove(group + "/");
+
+            QString newLineStr = key + "=" + cIter.value().toString();
+            newLineStrList.append(newLineStr);
+        }
+
+        newLineStrList.append("");
+    }
+
+    device.write(newLineStrList.join("\n").toUtf8());
+    return true;
+}
+
+const QSettings::Format ServiceSettingsFormat =
+             QSettings::registerFormat("service", readKeyValueFile, writeKeyValueFile);
+
+void setServiceSettingsValue(const QString &filePath, const QString &group, const QString &key, const QVariant &value)
+{
+    QSettings serviceSettings(filePath, ServiceSettingsFormat);
+    serviceSettings.setIniCodec("utf-8");
+    serviceSettings.beginGroup(group);
+    serviceSettings.setValue(key, value);
+    serviceSettings.endGroup();
+    serviceSettings.sync();
+
+    QFile f(filePath);
+    if (!f.open(QIODevice::OpenModeFlag::ReadOnly)) {
+        return;
+    }
+
+    // 还原被QSettings转码的特殊字符
+    QByteArray contentBa = f.readAll();
+    QByteArray encodingContentBa = QByteArray::fromPercentEncoding(contentBa);
+    f.close();
+
+    if (!f.open(QIODevice::OpenModeFlag::WriteOnly)) {
+       return;
+    }
+    f.write(encodingContentBa);
+    f.close();
+    fsync(f.handle()); // 将文件数据同步到磁盘
+}
+
+QString getServiceSettingsValue(const QString &filePath, const QString &group, const QString &key)
+{
+    QSettings iniSettings(filePath, ServiceSettingsFormat);
+    iniSettings.setIniCodec("utf-8");
+    iniSettings.beginGroup(group);
+    QString value = iniSettings.value(key).toString();
+    iniSettings.endGroup();
+
+    return value;
+}
+
+void setDesktopValue(const QString &desktopFilePath, const QString &key, const QVariant &value)
+{
+    setServiceSettingsValue(desktopFilePath, "Desktop Entry", key, value);
+}
+
+QString getDesktopValue(const QString &filePath, const QString &key)
+{
+    return getServiceSettingsValue(filePath, "Desktop Entry", key);
+}
+
+void setSystemdServiceValue(const QString &filePath, const QString &key, const QVariant &value)
+{
+    setServiceSettingsValue(filePath, "Service", key, value);
+}
+
+QString getSystemdServiceValue(const QString &filePath, const QString &key)
+{
+    return getServiceSettingsValue(filePath, "Service", key);
+}
+
+void setDBusServiceValue(const QString &filePath, const QString &key, const QVariant &value)
+{
+    setServiceSettingsValue(filePath, "D-BUS Service", key, value);
+}
+
+QString getDBusServiceValue(const QString &filePath, const QString &key)
+{
+    return getServiceSettingsValue(filePath, "D-BUS Service", key);
+}
+
+QString getDirKbSizeStrByCmd(const QString &dirPath)
+{
+    QProcess proc;
+    proc.start("du", {"-s", dirPath});
+    proc.waitForStarted();
+    // 一直等到运行完成
+    bool finished = false;
+    while (!finished) {
+        finished = proc.waitForFinished();
+    }
+
+    QString err = proc.readAllStandardError();
+    if (!err.isEmpty()) {
+        qCritical() << Q_FUNC_INFO << err;
+    }
+
+    QString ret = proc.readAllStandardOutput();
+    proc.close();
+
+    ret = ret.split("	").first();
+    return ret;
+}
+
 AppManagerJob::AppManagerJob(QObject *parent)
     : QObject(parent)
     , m_runningStatus(Normal)
@@ -76,6 +233,9 @@ AppManagerJob::AppManagerJob(QObject *parent)
     , m_netReply(nullptr)
     , m_pkgMonitor(nullptr)
 {
+    m_currentCpuArchStr = QSysInfo::currentCpuArchitecture();
+    m_currentCpuArchStr.replace("x86_64", "amd64");
+
     const QString &desktopPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
     m_downloadDirPath = QString("%1/downloadedPkg").arg(desktopPath);
     m_pkgBuildCacheDirPath = "/tmp/pkg-build-cache";
@@ -152,10 +312,7 @@ void AppManagerJob::reloadAppInfos()
     // 判断架构包信息文件名过滤信息
     QString archPkgsFilterStr;
     if (m_isOnlyLoadCurrentArchAppInfos) {
-        const QString &currentCpuArch = QSysInfo::currentCpuArchitecture();
-        archPkgsFilterStr = ("x86_64" == currentCpuArch) ?
-                    QString("%1_Packages").arg("amd64") :
-                    QString("%1_Packages").arg(currentCpuArch);
+        archPkgsFilterStr = QString("%1_Packages").arg(m_currentCpuArchStr);
     } else {
         archPkgsFilterStr = "_Packages";
     }
@@ -284,7 +441,7 @@ void AppManagerJob::onFileDownloadFinished()
 
 void AppManagerJob::startBuildPkgTask(const AppInfo &info)
 {
-    bool successed = buildPkg(info);
+    bool successed = buildPkg(info.installedPkgInfo);
     Q_EMIT buildPkgTaskFinished(successed, info);
 }
 
@@ -769,7 +926,14 @@ void AppManagerJob::loadPkgInstalledAppInfo(const AM::PkgInfo &pkgInfo)
         appInfo->pkgName = pkgInfo.pkgName;
     }
     appInfo->isInstalled = true;
-    appInfo->installedPkgInfo = pkgInfo;
+    // 优先为应用信息匹配当前架构已安装的包信息
+    if (appInfo->installedPkgInfo.pkgName.isEmpty()
+        || m_currentCpuArchStr == pkgInfo.arch) {
+        appInfo->installedPkgInfo = pkgInfo;
+    } else {
+        m_mutex.unlock(); // 解锁
+        return;
+    }
 
     // 获取安装文件路径列表
     appInfo->installedPkgInfo.installedFileList = getAppInstalledFileList(appInfo->installedPkgInfo.pkgName, appInfo->installedPkgInfo.arch);
@@ -958,8 +1122,13 @@ qint64 AppManagerJob::getUrlFileSize(QString &url, int tryTimes)
     return size;
 }
 
-bool AppManagerJob::buildPkg(const AppInfo &info)
+bool AppManagerJob::buildPkg(const PkgInfo &pkgInfo, bool withDepend)
 {
+    if (pkgInfo.depends.isEmpty()) {
+        qInfo() << Q_FUNC_INFO << pkgInfo.pkgName << "has no depends, use direct build method";
+        withDepend = false;
+    }
+
     //// 1. 清空打包缓存目录文件
     QDir pkgBuildCacheDir(m_pkgBuildCacheDirPath);
     if (pkgBuildCacheDir.exists()) {
@@ -974,7 +1143,7 @@ bool AppManagerJob::buildPkg(const AppInfo &info)
     }
 
     //// 2. 拷贝已安装的文件
-    for (const QString &path : info.installedPkgInfo.installedFileList) {
+    for (const QString &path : pkgInfo.installedFileList) {
         QFileInfo fileInfo(path);
         if (fileInfo.isDir()) {
             continue;
@@ -992,6 +1161,143 @@ bool AppManagerJob::buildPkg(const AppInfo &info)
         QFile::copy(path, newFilePath);
     }
 
+    // 如果本次连同依赖一起打包
+    if (withDepend) {
+        //// 2.1 拷贝依赖库的文件
+        const QString dependsDirPath = QString("/opt/apps/%1/files/%2-depends")
+                .arg(pkgInfo.pkgName)
+                .arg(pkgInfo.version);
+        const QString newDependsDirPath = QString("%1%2")
+                .arg(m_pkgBuildCacheDirPath)
+                .arg(dependsDirPath);
+        QStringList findedPkgNameList;
+        QStringList dependPkgNameList = getPkgDepends(findedPkgNameList, pkgInfo.pkgName);
+        for (const QString &dependPkgName : dependPkgNameList) {
+            const PkgInfo &dependPkgInfo = m_appInfosMap.value(dependPkgName).installedPkgInfo;
+
+            for (const QString &filePath : dependPkgInfo.installedFileList) {
+                QFileInfo fileInfo(filePath);
+                if (fileInfo.isDir()) {
+                    continue;
+                }
+
+                if (filePath.startsWith("/usr/share/")) {
+                    continue;
+                }
+
+                QString newFilePath = QString("%1%2")
+                        .arg(newDependsDirPath)
+                        .arg(filePath);
+                QFileInfo newFileInfo(newFilePath);
+                QString newFileDirPath = newFileInfo.dir().path();
+
+                if (!newFileInfo.dir().exists()) {
+                    bool ret = newFileInfo.dir().mkpath(newFileDirPath);
+                    ret = 0;
+                }
+
+                QFile::copy(filePath, newFilePath);
+            }
+        }
+
+        //// 2.2 修改desktop文件中启动命令，设置单独的依赖路径环境变量
+        const QString execBashStrFormation = QString(
+                    "#!/bin/sh\n"
+                    "export LAUNCHER_DEPENDS_LOCATION=%1\n"
+                    "export LD_LIBRARY_PATH=\"${LAUNCHER_DEPENDS_LOCATION}/lib/x86_64-linux-gnu:"
+                    "${LAUNCHER_DEPENDS_LOCATION}/usr/bin:${LAUNCHER_DEPENDS_LOCATION}/usr/lib:"
+                    "${LAUNCHER_DEPENDS_LOCATION}/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH\"\n"
+                    "\n"
+                    "/sbin/ldconfig -p | grep -q libstdc++ || export LD_LIBRARY_PATH="
+                    "\"$LD_LIBRARY_PATH:${LAUNCHER_DEPENDS_LOCATION}/libstdc++/\"\n"
+                    "bash -c \"%2\" \"$@\"");
+
+        for (const QString &path : pkgInfo.installedFileList) {
+            QFileInfo fileInfo(path);
+            if (fileInfo.isDir()) {
+                continue;
+            }
+
+            bool isDesktop = path.endsWith(".desktop");
+            bool isSystemdService = (path.startsWith("/lib/systemd/system/") && path.endsWith(".service"));
+            bool isSysDBusService = (path.startsWith("/usr/share/dbus-1/system-services/") && path.endsWith(".service"));
+            bool isSessionDBusService = (path.startsWith("/usr/share/dbus-1/services/") && path.endsWith(".service"));
+            if (!isDesktop && !isSystemdService && !isSysDBusService && !isSessionDBusService) {
+                continue;
+            }
+
+            // 生成执行shell脚本文件
+            QString execBashFilePath = QString("/opt/apps/%1/files/%2-exec-bash/%3")
+                    .arg(pkgInfo.pkgName)
+                    .arg(pkgInfo.version)
+                    .arg(fileInfo.fileName() + ".sh");
+            QString newExecBashFilePath = QString("%1%2")
+                    .arg(m_pkgBuildCacheDirPath)
+                    .arg(execBashFilePath);
+
+            // 检测待创建的执行shell脚本文件目录是否创建
+            QFileInfo newExecBashFileInfo(newExecBashFilePath);
+            QString newExecBashFileDirPath = newExecBashFileInfo.dir().path();
+            if (!newExecBashFileInfo.dir().exists()) {
+                newExecBashFileInfo.dir().mkpath(newExecBashFileDirPath);
+            }
+
+            QFile newExecBashFile(newExecBashFilePath);
+            if (!newExecBashFile.open(QIODevice::OpenModeFlag::WriteOnly)) {
+                qCritical() << Q_FUNC_INFO << newExecBashFilePath << "open failed!";
+                return false;
+            }
+
+            // 获取desktop中执行命令和后缀
+            QString newFilePath = m_pkgBuildCacheDirPath + path;
+            QString execNoSuffix;
+            QString execSuffix;
+            if (isSystemdService) {
+                execNoSuffix = getSystemdServiceValue(newFilePath, "ExecStart");
+                execNoSuffix.remove("sudo ").remove("sudo,");
+            } else if (isSysDBusService) {
+                execNoSuffix = getDBusServiceValue(newFilePath, "Exec");
+                execNoSuffix.remove("sudo ").remove("sudo,");
+            } else if (isSessionDBusService) {
+                execNoSuffix = getDBusServiceValue(newFilePath, "Exec");
+            } else if (isDesktop) {
+                execNoSuffix = getDesktopValue(newFilePath, "Exec");
+                QStringList execList = execNoSuffix.split(" ");
+                if (execList.last().startsWith("%")) {
+                    execSuffix = execList.last();
+                    execList.removeLast();
+                    execNoSuffix = execList.join(" ");
+                }
+            }
+
+            QByteArray content = execBashStrFormation.arg(dependsDirPath).arg(execNoSuffix).toUtf8();
+            newExecBashFile.write(content);
+            newExecBashFile.setPermissions(newExecBashFile.permissions()
+                                            | QFile::Permission::ExeUser
+                                            | QFile::Permission::ExeGroup
+                                            | QFile::Permission::ExeOther
+                                            | QFile::Permission::ExeOwner);
+            newExecBashFile.close();
+            fsync(newExecBashFile.handle());
+
+            QString adjustExecPath = execBashFilePath;
+            if (!execSuffix.isEmpty()) {
+                adjustExecPath.append(" ");
+                adjustExecPath.append(execSuffix);
+            }
+
+            if (isSystemdService) {
+                setSystemdServiceValue(newFilePath, "ExecStart",  adjustExecPath);
+            } else if (isSysDBusService) {
+                setDBusServiceValue(newFilePath, "Exec", adjustExecPath);
+            } else if (isSessionDBusService) {
+                setDBusServiceValue(newFilePath, "Exec", adjustExecPath);
+            } else if (isDesktop) {
+                setDesktopValue(newFilePath, "Exec", adjustExecPath);
+            }
+        }
+    }
+
     //// 3. 收集DEBIAN目录中文件
     QString outputDebianDir = QString("%1/DEBIAN").arg(m_pkgBuildCacheDirPath);
     QFileInfo outputDebianDirInfo(outputDebianDir);
@@ -999,7 +1305,7 @@ bool AppManagerJob::buildPkg(const AppInfo &info)
         outputDebianDirInfo.dir().mkdir(outputDebianDir);
     }
     // 收集DEBIAN/changelog文件
-    QString changelogGZPath = QString("/usr/share/doc/%1/changelog.Debian.gz").arg(info.pkgName);
+    QString changelogGZPath = QString("/usr/share/doc/%1/changelog.Debian.gz").arg(pkgInfo.pkgName);
     QString changelogOutputPath = QString("%1/changelog").arg(outputDebianDir);
     // 先判断类型是否为gzip
     QMimeDatabase mimeDb;
@@ -1017,66 +1323,66 @@ bool AppManagerJob::buildPkg(const AppInfo &info)
     }
 
     // 收集DEBIAN/copyright文件
-    QString copyrightFilePath = QString("/usr/share/doc/%1/copyright").arg(info.pkgName);
+    QString copyrightFilePath = QString("/usr/share/doc/%1/copyright").arg(pkgInfo.pkgName);
     QString copyrightFileOutputPath = QString("%1/copyright").arg(outputDebianDir);
     if (QFile::exists(copyrightFilePath)) {
         QFile::copy(copyrightFilePath, copyrightFileOutputPath);
     }
 
     // 判断文件名中是否有架构名
-    QString listFilePath = QString("/var/lib/dpkg/info/%1.list").arg(info.pkgName);
-    QString archContent = QFile::exists(listFilePath) ? "" : QString(":%1").arg(info.installedPkgInfo.arch);
+    QString listFilePath = QString("/var/lib/dpkg/info/%1.list").arg(pkgInfo.pkgName);
+    QString archContent = QFile::exists(listFilePath) ? "" : QString(":%1").arg(pkgInfo.arch);
 
     // 收集DEBIAN/postinst文件
-    QString postinstFilePath = QString("/var/lib/dpkg/info/%1%2.postinst").arg(info.pkgName).arg(archContent);
+    QString postinstFilePath = QString("/var/lib/dpkg/info/%1%2.postinst").arg(pkgInfo.pkgName).arg(archContent);
     QString postinstFileOutputPath = QString("%1/postinst").arg(outputDebianDir);
     if (QFile::exists(postinstFilePath)) {
         QFile::copy(postinstFilePath, postinstFileOutputPath);
     }
     // 收集DEBIAN/postrm文件
-    QString postrmFilePath = QString("/var/lib/dpkg/info/%1%2.postrm").arg(info.pkgName).arg(archContent);
+    QString postrmFilePath = QString("/var/lib/dpkg/info/%1%2.postrm").arg(pkgInfo.pkgName).arg(archContent);
     QString postrmFileOutputPath = QString("%1/postrm").arg(outputDebianDir);
     if (QFile::exists(postrmFilePath)) {
         QFile::copy(postrmFilePath, postrmFileOutputPath);
     }
     // 收集DEBIAN/preinst文件
-    QString preinstFilePath = QString("/var/lib/dpkg/info/%1%2.preinst").arg(info.pkgName).arg(archContent);
+    QString preinstFilePath = QString("/var/lib/dpkg/info/%1%2.preinst").arg(pkgInfo.pkgName).arg(archContent);
     QString preinstFileOutputPath = QString("%1/preinst").arg(outputDebianDir);
     if (QFile::exists(preinstFilePath)) {
         QFile::copy(preinstFilePath, preinstFileOutputPath);
     }
     // 收集DEBIAN/prerm文件
-    QString prermFilePath = QString("/var/lib/dpkg/info/%1%2.prerm").arg(info.pkgName).arg(archContent);
+    QString prermFilePath = QString("/var/lib/dpkg/info/%1%2.prerm").arg(pkgInfo.pkgName).arg(archContent);
     QString prermFileOutputPath = QString("%1/prerm").arg(outputDebianDir);
     if (QFile::exists(prermFilePath)) {
         QFile::copy(prermFilePath, prermFileOutputPath);
     }
     // 收集DEBIAN/conffiles文件
-    QString conffilesFilePath = QString("/var/lib/dpkg/info/%1%2.conffiles").arg(info.pkgName).arg(archContent);
+    QString conffilesFilePath = QString("/var/lib/dpkg/info/%1%2.conffiles").arg(pkgInfo.pkgName).arg(archContent);
     QString conffilesFileOutputPath = QString("%1/conffiles").arg(outputDebianDir);
     if (QFile::exists(conffilesFilePath)) {
         QFile::copy(conffilesFilePath, conffilesFileOutputPath);
     }
     // 收集DEBIAN/md5sums文件
-    QString md5sumsFilePath = QString("/var/lib/dpkg/info/%1%2.md5sums").arg(info.pkgName).arg(archContent);
+    QString md5sumsFilePath = QString("/var/lib/dpkg/info/%1%2.md5sums").arg(pkgInfo.pkgName).arg(archContent);
     QString md5sumsFileOutputPath = QString("%1/md5sums").arg(outputDebianDir);
     if (QFile::exists(md5sumsFilePath)) {
         QFile::copy(md5sumsFilePath, md5sumsFileOutputPath);
     }
     // 收集DEBIAN/triggers文件
-    QString triggersFilePath = QString("/var/lib/dpkg/info/%1%2.triggers").arg(info.pkgName).arg(archContent);
+    QString triggersFilePath = QString("/var/lib/dpkg/info/%1%2.triggers").arg(pkgInfo.pkgName).arg(archContent);
     QString triggersFileOutputPath = QString("%1/triggers").arg(outputDebianDir);
     if (QFile::exists(triggersFilePath)) {
         QFile::copy(triggersFilePath, triggersFileOutputPath);
     }
     // 收集DEBIAN/shlibs文件
-    QString shlibsFilePath = QString("/var/lib/dpkg/info/%1%2.shlibs").arg(info.pkgName).arg(archContent);
+    QString shlibsFilePath = QString("/var/lib/dpkg/info/%1%2.shlibs").arg(pkgInfo.pkgName).arg(archContent);
     QString shlibsFileOutputPath = QString("%1/shlibs").arg(outputDebianDir);
     if (QFile::exists(shlibsFilePath)) {
         QFile::copy(shlibsFilePath, shlibsFileOutputPath);
     }
     // 收集DEBIAN/symbols文件
-    QString symbolsFilePath = QString("/var/lib/dpkg/info/%1%2.symbols").arg(info.pkgName).arg(archContent);
+    QString symbolsFilePath = QString("/var/lib/dpkg/info/%1%2.symbols").arg(pkgInfo.pkgName).arg(archContent);
     QString symbolsFileOutputPath = QString("%1/symbols").arg(outputDebianDir);
     if (QFile::exists(symbolsFilePath)) {
         QFile::copy(symbolsFilePath, symbolsFileOutputPath);
@@ -1085,7 +1391,7 @@ bool AppManagerJob::buildPkg(const AppInfo &info)
     //// 4. 收集DEBIAN/control文件
     // 读取包信息
     QString pkgControlInfos;
-    QString pkgControlInfosHeader = QString("Package: %1").arg(info.pkgName);
+    QString pkgControlInfosHeader = QString("Package: %1").arg(pkgInfo.pkgName);
     bool isThisPkgInfo = false;
     QFile statusFile("/var/lib/dpkg/status");
     if (!statusFile.open(QIODevice::OpenModeFlag::ReadOnly)) {
@@ -1108,6 +1414,22 @@ bool AppManagerJob::buildPkg(const AppInfo &info)
         if (isThisPkgInfo) {
             // 不需要Status信息
             if (lineTxt.startsWith("Status: ")) {
+                continue;
+            }
+
+            // 如果本次连同依赖一起打包，则不需要Depends信息
+            if (lineTxt.startsWith("Depends: ")) {
+                if (withDepend) {
+                    pkgControlInfos.append("Depends(origin): " + lineTxt);
+                    pkgControlInfos.append("\n");
+                    continue;
+                }
+            }
+
+            // 计算占用大小
+            if (lineTxt.startsWith("Installed-Size: ")) {
+                pkgControlInfos.append("Installed-Size: " + getDirKbSizeStrByCmd(m_pkgBuildCacheDirPath));
+                pkgControlInfos.append("\n");
                 continue;
             }
 
@@ -1138,9 +1460,9 @@ bool AppManagerJob::buildPkg(const AppInfo &info)
     }
     QString pkgBuildFilePath = QString("%1/%2_%3_%4.deb")
                                    .arg(m_pkgBuildDirPath)
-                                   .arg(info.pkgName)
-                                   .arg(info.installedPkgInfo.version)
-                                   .arg(info.installedPkgInfo.arch);
+                                   .arg(pkgInfo.pkgName)
+                                   .arg(pkgInfo.version)
+                                   .arg(pkgInfo.arch);
     QString cmd = QString("dpkg -b %1 %2").arg(m_pkgBuildCacheDirPath).arg(pkgBuildFilePath);
     QProcess dpkgBuildProc;
     dpkgBuildProc.start(cmd);
@@ -1186,4 +1508,68 @@ bool AppManagerJob::installLocalPkg(const QString &path, QString &err)
     proc = nullptr;
 
     return true;
+}
+
+QStringList AppManagerJob::getPkgDepends(QStringList &findedPkgNameList, const QString &pkgName)
+{
+//    qInfo() << Q_FUNC_INFO << "start" << pkgName;
+    QStringList dependPkgNameList;
+
+    if (IgnoredDependPkgNameListOfPkgBuildWithDepends.contains(pkgName)) {
+        qInfo() << Q_FUNC_INFO << pkgName << "IgnoredDependPkgNameListOfPkgBuildWithDepends" << pkgName;
+        return dependPkgNameList;
+    }
+
+    if (findedPkgNameList.contains(pkgName)) {
+        qInfo() << Q_FUNC_INFO << pkgName << "has finded once!";
+        return dependPkgNameList;
+    }
+
+    const PkgInfo installedPkgInfo = m_appInfosMap.value(pkgName).installedPkgInfo;
+    if (installedPkgInfo.pkgName.isEmpty()) {
+        qInfo() << Q_FUNC_INFO << pkgName << "is not installed!";
+        return dependPkgNameList;
+    }
+
+    QString dependsStr = installedPkgInfo.depends;
+//    qInfo() << Q_FUNC_INFO << pkgName << "dependsStr" << dependsStr;
+    if (dependsStr.isEmpty()) {
+        qInfo() << Q_FUNC_INFO << pkgName << "has no depends!";
+        return dependPkgNameList;
+    }
+
+    QRegExp regExp;
+    QStringList dependsStrFirstCutList = dependsStr.split(",");
+    for (const QString &str : dependsStrFirstCutList) {
+        QStringList dependsStrSecCutList = str.split("|");
+        for (QString secStr : dependsStrSecCutList) {
+            regExp.setPattern("\\(.*\\)");
+            secStr.remove(regExp);
+
+            regExp.setPattern(" +");
+            secStr.remove(regExp);
+
+            regExp.setPattern(":+");
+            secStr.remove(regExp);
+
+            findedPkgNameList.append(pkgName);
+            QStringList childPkgDepends = getPkgDepends(findedPkgNameList, secStr);
+            for (const QString &pkgName : childPkgDepends) {
+                if (dependPkgNameList.contains(pkgName)) {
+                    continue;
+                }
+                if (IgnoredDependPkgNameListOfPkgBuildWithDepends.contains(pkgName)) {
+                    continue;
+                }
+
+                dependPkgNameList.append(pkgName);
+            }
+            if (dependPkgNameList.contains(secStr)) {
+                continue;
+            }
+            dependPkgNameList.append(secStr);
+        }
+    }
+
+    return dependPkgNameList;
 }
