@@ -8,6 +8,7 @@
 #define X_DEEPIN_VENDOR_STR "deepin"
 // 应用默认图标
 #define APP_THEME_ICON_DEFAULT "application-x-executable"
+#define MY_PKG_NAME "com.github.ccc-app-manager"
 
 // 列表数据角色定义
 #define AM_LIST_VIEW_ITEM_DATA_ROLE_PKG_NAME Dtk::ItemDataRole::UserRole + 1

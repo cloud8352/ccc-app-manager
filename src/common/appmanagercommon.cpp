@@ -49,7 +49,7 @@ AM::PinyinInfo AM::getPinYinInfoFromStr(const QString &words)
 void AM::popupNormalSysNotify(const QString &summary, const QString &body)
 {
     QProcess proc;
-    proc.startDetached("notify-send", {"-a", "com.github.ccc-app-manager", summary, body});
+    proc.startDetached("notify-send", {"-a", MY_PKG_NAME, summary, body});
 }
 
 // 移除字符串结尾的"0"和"."

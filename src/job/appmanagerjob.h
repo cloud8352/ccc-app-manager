@@ -49,7 +49,7 @@ public Q_SLOTS:
     void onDownloadProgressChanged(qint64, qint64);
     void onFileDownloadFinished();
     // 开始构建安装包任务
-    void startBuildPkgTask(const AM::AppInfo &info);
+    void startBuildPkgTask(const AM::AppInfo &info, bool withDepends);
 
     // 开始搜索任务
     void startSearchTask(const QString &text);

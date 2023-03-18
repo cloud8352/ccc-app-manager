@@ -53,7 +53,7 @@ Q_SIGNALS:
     // 通知卸载包
     void notifyThreadUninstallPkg(const QString &pkgName);
     // 通知构建安装包
-    void notifyThreadBuildPkg(const AM::AppInfo &info);
+    void notifyThreadBuildPkg(const AM::AppInfo &info, bool withDepends);
     // 构建安装包任务完成
     void buildPkgTaskFinished(bool successed, const AM::AppInfo &info);
     // 通知安装oh-my-dde

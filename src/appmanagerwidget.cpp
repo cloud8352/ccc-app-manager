@@ -312,10 +312,18 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
     firstLineBottomLayout->addWidget(getPkgFromSrvBtn);
 
     firstLineBottomLayout->addSpacing(10);
+    // 跳转到应用商店菜单
+    QAction *buildPkgAction = new QAction("不包含依赖", this);
+    buildPkgAction->setCheckable(false);
+    QAction *buildPkgWithDependsAction = new QAction("包含依赖（实验）", this);
+    buildPkgWithDependsAction->setCheckable(false);
+    QMenu *buildPkgMenu = new QMenu(this);
+    buildPkgMenu->addAction(buildPkgAction);
+    buildPkgMenu->addAction(buildPkgWithDependsAction);
     QPushButton *getPkgFromLocalBtn = new QPushButton("离线获取安装包", this);
+    getPkgFromLocalBtn->setMenu(buildPkgMenu);
     getPkgFromLocalBtn->setMaximumWidth(170);
     firstLineBottomLayout->addWidget(getPkgFromLocalBtn);
-    firstLineBottomLayout->addSpacing(10);
 
     // 左置顶
     firstLineBottomLayout->addStretch(1);
@@ -423,10 +431,21 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
     });
 
     // 离线获取安装包
-    connect(getPkgFromLocalBtn, &QPushButton::clicked, this, [this](bool) {
+    connect(buildPkgMenu, &QMenu::triggered, this, [buildPkgAction, buildPkgWithDependsAction, this](QAction *action) {
+        bool withDepends = false;
+        QString msg;
+        if (action == buildPkgAction) {
+            withDepends = false;
+            msg = "是否开始离线获取安装包？";
+        } else if (action == buildPkgWithDependsAction) {
+            withDepends = true;
+            msg = "是否开始连同依赖一起构建安装包？\n"
+                  "（这种方法不能绝对保证打包程序的功能正常，是一种备用方案，请谨慎使用）";
+        }
+
         // 确认窗口
         DDialog confirmDlg(this);
-        confirmDlg.setMessage("是否开始离线获取安装包？");
+        confirmDlg.setMessage(msg);
 
         // 取消按钮
         confirmDlg.addButton("取消", false);
@@ -439,7 +458,7 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
             return;
         }
 
-        Q_EMIT this->m_model->notifyThreadBuildPkg(m_showingAppInfo);
+        Q_EMIT this->m_model->notifyThreadBuildPkg(m_showingAppInfo, withDepends);
         DDialog *dlg = new DDialog(this);
         dlg->setCloseButtonVisible(false);
         QString title = QString("%1安装包构建中...").arg(m_showingAppInfo.pkgName);

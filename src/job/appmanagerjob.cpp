@@ -238,7 +238,9 @@ AppManagerJob::AppManagerJob(QObject *parent)
 
     const QString &desktopPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
     m_downloadDirPath = QString("%1/downloadedPkg").arg(desktopPath);
-    m_pkgBuildCacheDirPath = "/tmp/pkg-build-cache";
+    m_pkgBuildCacheDirPath = QString("/tmp/%1/%2/pkg-build-cache")
+            .arg(MY_PKG_NAME)
+            .arg(QDir::home().dirName());
     m_pkgBuildDirPath = QString("%1/pkgBuild").arg(desktopPath);
 }
 
@@ -439,9 +441,9 @@ void AppManagerJob::onFileDownloadFinished()
     Q_EMIT pkgFileDownloadFinished(m_downloadingPkgInfo);
 }
 
-void AppManagerJob::startBuildPkgTask(const AppInfo &info)
+void AppManagerJob::startBuildPkgTask(const AppInfo &info, bool withDepends)
 {
-    bool successed = buildPkg(info.installedPkgInfo);
+    bool successed = buildPkg(info.installedPkgInfo, withDepends);
     Q_EMIT buildPkgTaskFinished(successed, info);
 }
 
@@ -1137,7 +1139,8 @@ bool AppManagerJob::buildPkg(const PkgInfo &pkgInfo, bool withDepend)
             return false;
         }
     }
-    if (!pkgBuildCacheDir.mkdir(m_pkgBuildCacheDirPath)) {
+
+    if (!pkgBuildCacheDir.mkpath(m_pkgBuildCacheDirPath)) {
         qCritical() << Q_FUNC_INFO << m_pkgBuildCacheDirPath << "create failed!";
         return false;
     }
