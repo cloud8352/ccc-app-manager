@@ -1124,11 +1124,11 @@ qint64 AppManagerJob::getUrlFileSize(QString &url, int tryTimes)
     return size;
 }
 
-bool AppManagerJob::buildPkg(const PkgInfo &pkgInfo, bool withDepend)
+bool AppManagerJob::buildPkg(const PkgInfo &pkgInfo, bool withDepends)
 {
     if (pkgInfo.depends.isEmpty()) {
         qInfo() << Q_FUNC_INFO << pkgInfo.pkgName << "has no depends, use direct build method";
-        withDepend = false;
+        withDepends = false;
     }
 
     //// 1. 清空打包缓存目录文件
@@ -1165,7 +1165,7 @@ bool AppManagerJob::buildPkg(const PkgInfo &pkgInfo, bool withDepend)
     }
 
     // 如果本次连同依赖一起打包
-    if (withDepend) {
+    if (withDepends) {
         //// 2.1 拷贝依赖库的文件
         const QString dependsDirPath = QString("/opt/apps/%1/files/%2-depends")
                 .arg(pkgInfo.pkgName)
@@ -1207,9 +1207,9 @@ bool AppManagerJob::buildPkg(const PkgInfo &pkgInfo, bool withDepend)
         const QString execBashStrFormation = QString(
                     "#!/bin/sh\n"
                     "export LAUNCHER_DEPENDS_LOCATION=%1\n"
-                    "export LD_LIBRARY_PATH=\"${LAUNCHER_DEPENDS_LOCATION}/lib/x86_64-linux-gnu:"
-                    "${LAUNCHER_DEPENDS_LOCATION}/usr/bin:${LAUNCHER_DEPENDS_LOCATION}/usr/lib:"
-                    "${LAUNCHER_DEPENDS_LOCATION}/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH\"\n"
+                    "export LD_LIBRARY_PATH=\"${LAUNCHER_DEPENDS_LOCATION}/lib:"
+                    "${LAUNCHER_DEPENDS_LOCATION}/usr/bin:"
+                    "${LAUNCHER_DEPENDS_LOCATION}/usr/lib:$LD_LIBRARY_PATH\"\n"
                     "\n"
                     "/sbin/ldconfig -p | grep -q libstdc++ || export LD_LIBRARY_PATH="
                     "\"$LD_LIBRARY_PATH:${LAUNCHER_DEPENDS_LOCATION}/libstdc++/\"\n"
@@ -1422,7 +1422,7 @@ bool AppManagerJob::buildPkg(const PkgInfo &pkgInfo, bool withDepend)
 
             // 如果本次连同依赖一起打包，则不需要Depends信息
             if (lineTxt.startsWith("Depends: ")) {
-                if (withDepend) {
+                if (withDepends) {
                     pkgControlInfos.append("Depends(origin): " + lineTxt);
                     pkgControlInfos.append("\n");
                     continue;
