@@ -11,7 +11,12 @@
 #define MY_PKG_NAME "com.github.ccc-app-manager"
 
 // 列表数据角色定义
-#define AM_LIST_VIEW_ITEM_DATA_ROLE_PKG_NAME Dtk::ItemDataRole::UserRole + 1
+#define AM_LIST_VIEW_ITEM_DATA_ROLE_ALL_DATA Dtk::ItemDataRole::UserRole + 1
+#define AM_LIST_VIEW_ITEM_DATA_ROLE_PKG_NAME Dtk::ItemDataRole::UserRole + 2
+#define AM_LIST_VIEW_ITEM_DATA_ROLE_APP_NAME Dtk::ItemDataRole::UserRole + 3
+#define AM_LIST_VIEW_ITEM_DATA_ROLE_PKG_SIZE Dtk::ItemDataRole::UserRole + 4
+#define AM_LIST_VIEW_ITEM_DATA_ROLE_INSTALLED_SIZE Dtk::ItemDataRole::UserRole + 5
+#define AM_LIST_VIEW_ITEM_DATA_ROLE_UPDATED_TIME Dtk::ItemDataRole::UserRole + 6
 
 // 文件大小单位，以b为基本单位
 #define KB_COUNT (1 << 10)
@@ -58,6 +63,7 @@ struct PkgInfo {
         pkgSize = 0;
     }
 };
+
 struct DesktopInfo {
     QString appName;
     QString desktopPath;
@@ -107,3 +113,8 @@ bool judgePkgIsInstalledFromStr(const QString &str);
 // 判断GSettings中是否包含指定键
 bool isQGSettingsContainsKey(const QGSettings &settings, const QString &key);
 } // namespace AM
+
+// 申明元类型，供QVariant使用
+Q_DECLARE_METATYPE(AM::PkgInfo)
+Q_DECLARE_METATYPE(AM::DesktopInfo)
+Q_DECLARE_METATYPE(AM::AppInfo)

@@ -52,6 +52,8 @@ public Q_SLOTS:
     void onAppInstalled(const AM::AppInfo &appInfo);
     void onAppUpdated(const AM::AppInfo &appInfo);
     void onAppUninstalled(const AM::AppInfo &appInfo);
+    // 当排序器出发后
+    void onSorterMenuTriggered(QAction *action);
 
 private:
     QString formateAppInfo(const AM::AppInfo &info);
@@ -67,6 +69,9 @@ private:
     void setLoading(bool loading);
     QList<QStandardItem *> createViewItemList(const AM::AppInfo &appInfo);
     void updateItemFromAppInfo(QStandardItem *item, const AM::AppInfo &appInfo);
+    AppInfo getAppInfoFromModelIndex(const QModelIndex &index);
+    AppInfo getAppInfoFromListViewModelByPkgName(const QString &pkgName);
+
     // 更新应用个数标签
     void updateAppCountLabel();
     // 更新高亮显示文字
@@ -76,7 +81,6 @@ private:
 
 private:
     QList<AM::AppInfo> m_appInfoList;
-    QList<AM::AppInfo> m_showingInfoList;
     AM::AppInfo m_showingAppInfo;
 
     AppManagerModel *m_model;
@@ -92,6 +96,12 @@ private:
     QAction *m_showSearchedAppAction;
     QAction *m_showVerHeldAppAction; // 保持版本的app过滤按钮
     DisplayRangeType m_displayRangeType; // 显示范围类型
+
+    QMenu *m_sorterMenu;
+    QAction *m_descendingSortByNameAction;
+    QAction *m_descendingSortByInstalledSizeAction;
+    QAction *m_descendingSortByUpdatedTimeAction;
+    QAction *m_currentSortingAction;
 
     QStandardItemModel *m_appListModel;
     DListView *m_appListView;

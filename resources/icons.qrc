@@ -1,13 +1,13 @@
 <RCC>
     <qresource prefix="/icons/deepin/builtin">
-        <file>light/icons/am_filter_64px.svg</file>
-        <file>dark/icons/am_filter_64px.svg</file>
         <file>icons/ccc-app-manager_56px.svg</file>
         <file>icons/app-manager_bak_64px.svg</file>
-        <file>icons/rotate_48px.svg</file>
-        <file>icons/chevron-down_48px.svg</file>
-        <file>icons/chevron-up_48px.svg</file>
         <file>icons/distributor-logo-deepin_64px.svg</file>
         <file>icons/spark-store_64px.svg</file>
+        <file>actions/rotate_48px.svg</file>
+        <file>actions/chevron-down_48px.svg</file>
+        <file>actions/chevron-up_48px.svg</file>
+        <file>actions/filter_48px.svg</file>
+        <file>actions/sorter_48px.svg</file>
     </qresource>
 </RCC>
