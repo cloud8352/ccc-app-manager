@@ -890,6 +890,16 @@ void AppManagerWidget::onSorterMenuTriggered(QAction *action)
         m_appListModel->setSortRole(AM_LIST_VIEW_ITEM_DATA_ROLE_UPDATED_TIME);
         m_appListModel->sort(0, Qt::SortOrder::DescendingOrder);
     }
+
+    if (m_appListModel->rowCount()) {
+        QModelIndex modelIndex = m_appListModel->index(0, 0);
+        m_appListView->setCurrentIndex(modelIndex);
+        AppInfo info = getAppInfoFromModelIndex(modelIndex);
+        showAppInfo(info);
+    } else {
+        // 此类别无应用，则显示空信息
+        showAppInfo(AppInfo());
+    }
 }
 
 QString AppManagerWidget::formateAppInfo(const AppInfo &info)
@@ -943,16 +953,6 @@ void AppManagerWidget::setItemModelFromAppInfoList(const QList<AppInfo> &appInfo
 
     // 排序
     onSorterMenuTriggered(m_currentSortingAction);
-
-    if (m_appListModel->rowCount()) {
-        QModelIndex modelIndex = m_appListModel->index(0, 0);
-        m_appListView->setCurrentIndex(modelIndex);
-        AppInfo info = getAppInfoFromModelIndex(modelIndex);
-        showAppInfo(info);
-    } else {
-        // 此类别无应用，则显示空信息
-        showAppInfo(AppInfo());
-    }
 
     // 更新应用个数标签
     updateAppCountLabel();
