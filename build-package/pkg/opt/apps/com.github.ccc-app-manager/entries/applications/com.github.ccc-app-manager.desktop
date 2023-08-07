@@ -1,6 +1,6 @@
 [Desktop Entry]
-Name=app-manager
-Name[zh_CN]=应用管理器
+Name=Spark AppManager
+Name[zh_CN]=星火应用管理器
 Categories=Utility;
 Comment=app manager,app,system
 Encoding=UTF-8
