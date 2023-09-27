@@ -224,6 +224,24 @@ void AppManagerModel::startDetachedDesktopExec(const QString &exec)
     proc.close();
 }
 
+void AppManagerModel::showFileItemInFileManager(const QString &urlPath)
+{
+    if (DSysInfo::isDeepin()) {
+        QProcess proc;
+        proc.startDetached("dde-file-manager", {"-n", "--show-item", urlPath});
+        proc.close();
+        return;
+    }
+
+    QDBusInterface dbusIface("org.freedesktop.FileManager1"
+                             , "/org/freedesktop/FileManager1"
+                             , "org.freedesktop.FileManager1"
+                             , QDBusConnection::sessionBus());
+    if (dbusIface.isValid()) {
+        dbusIface.call("ShowItems", QStringList{urlPath}, "");
+    }
+}
+
 void AppManagerModel::onAppInstalled(const AppInfo &appInfo)
 {
     popupNormalSysNotify("ccc-app-manager", QString("软件包 %1 已安装").arg(appInfo.pkgName));

@@ -3,6 +3,7 @@
 #include <DStyleOption>
 
 #include <QGSettings/QGSettings>
+#include <QProcess>
 
 #define ONLY_SHOW_IN_VALUE_DEEPIN "Deepin"
 #define X_DEEPIN_VENDOR_STR "deepin"
@@ -26,6 +27,9 @@
 
 // 时间格式化字符串
 #define DATE_TIME_FORMAT_STR "yyyy-MM-dd HH:mm:ss.zzz"
+
+// 包名格式化字符串
+#define PKG_NAME_FORMAT_STR "%1_%2_%3.deb"
 
 namespace AM {
 // 运行状态

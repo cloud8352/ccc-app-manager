@@ -3,8 +3,13 @@
 #include "common/appmanagercommon.h"
 #include "job/appmanagerjob.h"
 
+#include <DSysInfo>
+
 #include <QObject>
 #include <QMap>
+#include <QDBusInterface>
+
+DCORE_USE_NAMESPACE
 
 class QStandardItemModel;
 
@@ -37,6 +42,8 @@ public:
     AM::AppInfo getAppInfo(const QString &pkgName);
     // 运行desktop执行命令
     void startDetachedDesktopExec(const QString &exec);
+
+    void showFileItemInFileManager(const QString &urlPath);
 
 Q_SIGNALS:
     void runningStatusChanged(RunningStatus status);

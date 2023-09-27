@@ -378,7 +378,7 @@ void AppManagerJob::downloadFile(const QString &url)
     qint64 endOffset = fileSize;
 
     // 创建下载路径
-    QString fileName = QString("%1_%2_%3.deb")
+    QString fileName = QString(PKG_NAME_FORMAT_STR)
             .arg(m_downloadingPkgInfo.pkgName)
             .arg(m_downloadingPkgInfo.version)
             .arg(m_downloadingPkgInfo.arch);

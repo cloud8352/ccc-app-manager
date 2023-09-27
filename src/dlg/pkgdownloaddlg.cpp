@@ -231,7 +231,15 @@ void PkgDownloadDlg::initConnection()
 
     // 打开目录
     connect(m_openDirBtn, &QPushButton::clicked, this, [this](bool) {
-        QDesktopServices::openUrl(m_model->getDownloadDirPath());
+        QString fileName = QString(PKG_NAME_FORMAT_STR)
+                .arg(m_selectedPkgInfo.pkgName)
+                .arg(m_selectedPkgInfo.version)
+                .arg(m_selectedPkgInfo.arch);
+
+        QString path = QString("%1/%2")
+                .arg(m_model->getDownloadDirPath())
+                .arg(fileName);
+        m_model->showFileItemInFileManager(path);
     });
 
     connect(m_model, &AppManagerModel::pkgFileDownloadProgressChanged, this, &PkgDownloadDlg::onFileDownloadProgressChanged);
