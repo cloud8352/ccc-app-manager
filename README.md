@@ -12,6 +12,7 @@ make install
 ```
 
 ## 制作软件包
-进入`build-package`目录，运行build.sh
+运行
 
-构建软件包需要额外安装 `fakeroot`
+`./dpkg-buildpackage.sh`
+
