@@ -146,15 +146,13 @@ void setServiceSettingsValue(const QString &filePath, const QString &group, cons
         return;
     }
 
-    // 还原被QSettings转码的特殊字符
     QByteArray contentBa = f.readAll();
-    QByteArray encodingContentBa = QByteArray::fromPercentEncoding(contentBa);
     f.close();
 
     if (!f.open(QIODevice::OpenModeFlag::WriteOnly)) {
        return;
     }
-    f.write(encodingContentBa);
+    f.write(contentBa);
     f.close();
     fsync(f.handle()); // 将文件数据同步到磁盘
 }
