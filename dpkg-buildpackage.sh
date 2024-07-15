@@ -3,6 +3,7 @@
 # 获取版本号
 if [[ "" == $version ]] || [[ "\n" == $version ]]
 then
+    echo "请输入版本号："
     read -p "version: " version
 fi
 
