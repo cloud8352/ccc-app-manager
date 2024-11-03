@@ -21,7 +21,7 @@ com.github.ccc-app-manager ($version) unstable; urgency=medium
 EOF
 
 #更新info
-sed -i "s/\ \"version\":.*/\ \"version\": $version,/g" debian/deepin_pkg_info/info
+sed -i "s/\ \"version\":.*/\ \"version\": \"$version\",/g" debian/deepin_pkg_info/info
 
 dpkg-buildpackage -us -uc
 
