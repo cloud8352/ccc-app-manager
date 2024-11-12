@@ -25,7 +25,7 @@ stages:
         name: execute_by_docker
         displayName: 基于镜像的DTK构建
         certificate: ''
-        image: docker.io/debian:buster
+        image: docker.jianmuhub.com/library/debian:buster
         command:
           - pwd
           - /bin/bash build-on-gitee.sh
