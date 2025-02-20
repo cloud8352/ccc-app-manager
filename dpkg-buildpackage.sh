@@ -11,6 +11,7 @@ rm -rf dpkg-build-tmp
 mkdir -p dpkg-build-tmp
 cd dpkg-build-tmp
 cp -rf ../* .
+rm -rf dpkg-build-tmp
 
 cat << EOF > debian/changelog
 com.github.ccc-app-manager ($version) unstable; urgency=medium
