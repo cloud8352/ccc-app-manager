@@ -23,7 +23,7 @@ EOF
 #更新info
 sed -i "s/\ \"version\":.*/\ \"version\": \"$version\",/g" debian/deepin_pkg_info/info
 
-dpkg-buildpackage -us -uc
+dpkg-buildpackage -us -uc -b
 
 cd ..
 rm -rf dpkg-build-tmp
