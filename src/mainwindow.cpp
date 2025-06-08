@@ -6,8 +6,9 @@
 #include <DApplicationHelper>
 #include <DSysInfo>
 #include <DDialog>
-#include <QLabel>
 
+#include <QMenuBar>
+#include <QLabel>
 #include <QTextEdit>
 #include <QProcess>
 #include <QHBoxLayout>
@@ -15,7 +16,8 @@
 #include <QScreen>
 
 MainWindow::MainWindow(QWidget *parent)
-    : DMainWindow(parent)
+    : QMainWindow(parent)
+    , m_mainMenu(nullptr)
     , m_centralWidgetBlurBg(nullptr)
     , m_isDeepin(false)
     , m_appManagerModel(nullptr)
@@ -27,28 +29,25 @@ MainWindow::MainWindow(QWidget *parent)
     int resizedHeight = int(resizedWidth * 3 / 5);
     resize(resizedWidth, resizedHeight);
     // 设置背景
-    setTitlebarShadowEnabled(false);
+    // setTitlebarShadowEnabled(false);
     setFocusPolicy(Qt::FocusPolicy::ClickFocus);
 
-    titlebar()->setIcon(QIcon::fromTheme("ccc-app-manager"));
-    titlebar()->setTitle("应用管理器");
-    titlebar()->setFixedHeight(40);
-    titlebar()->setBackgroundTransparent(true);
-
-    QMenu *menu = new QMenu(this);
-    titlebar()->setMenu(menu);
+    QMenuBar *menuBar = this->menuBar();
+    m_mainMenu = new QMenu(this);
+    m_mainMenu->setTitle("打开");
+    menuBar->addMenu(m_mainMenu);
 
     QAction *watchGuiAppListAction = new QAction(this);
     watchGuiAppListAction->setText("复制启动器中所有应用包名");
-    menu->addAction(watchGuiAppListAction);
+    m_mainMenu->addAction(watchGuiAppListAction);
 
     QAction *openOhMyDDEAction = new QAction(this);
     openOhMyDDEAction->setText("打开oh-my-dde");
-    menu->addAction(openOhMyDDEAction);
+    m_mainMenu->addAction(openOhMyDDEAction);
 
     QAction *openProInfoWindowAction = new QAction(this);
     openProInfoWindowAction->setText("打开进程信息窗口");
-    menu->addAction(openProInfoWindowAction);
+    m_mainMenu->addAction(openProInfoWindowAction);
 
     m_centralWidgetBlurBg = new DBlurEffectWidget(this);
     m_centralWidgetBlurBg->setBlendMode(DBlurEffectWidget::BlendMode::BehindWindowBlend);
@@ -60,25 +59,32 @@ MainWindow::MainWindow(QWidget *parent)
     m_isDeepin =  DSysInfo::isDeepin();
 
     DFrame *centralWidget = new DFrame(this);
-    int dtkWindowRadius = 8;
-    if (QGSettings::isSchemaInstalled("com.deepin.xsettings")) {
-        QGSettings deepinSettings("com.deepin.xsettings");
-        if (AM::isQGSettingsContainsKey(deepinSettings, "dtk-window-radius")) {
-            dtkWindowRadius = deepinSettings.get("dtk-window-radius").toInt();
-        }
-    }
-    int internalPix =  dtkWindowRadius < 9 ? 0 : (dtkWindowRadius - 8) / 2;
-    centralWidget->setContentsMargins(4 + internalPix, 0, 4 + internalPix, 4 + internalPix);
+    QPalette pa = centralWidget->palette();
+    pa.setColor(QPalette::ColorRole::Base, Qt::transparent);
+    centralWidget->setPalette(pa);
     setCentralWidget(centralWidget);
 
-    QHBoxLayout *mainLayout = new QHBoxLayout;
+    QVBoxLayout *mainLayout = new QVBoxLayout;
     mainLayout->setContentsMargins(0, 0, 0, 0);
+    mainLayout->setSpacing(0);
     centralWidget->setLayout(mainLayout);
+
+    DTitlebar *titleBar = new DTitlebar(this);
+    titleBar->setIcon(QIcon(":/icons/ccc-app-manager_56px.svg"));
+    titleBar->setTitle("应用管理器");
+    // titleBar->setFixedHeight(40);
+    titleBar->setBackgroundTransparent(true);
+    titleBar->setMenu(m_mainMenu);
+    mainLayout->addWidget(titleBar, 0, Qt::AlignTop);
+
+    QHBoxLayout *contentLayout = new QHBoxLayout;
+    contentLayout->setContentsMargins(0, 0, 0, 0);
+    mainLayout->addLayout(contentLayout, 1);
 
     // 应用管理
     m_appManagerModel = new AppManagerModel(this);
     m_appManagerWidget = new AppManagerWidget(m_appManagerModel, this);
-    mainLayout->addWidget(m_appManagerWidget);
+    contentLayout->addWidget(m_appManagerWidget);
 
     // init connection
     // 运行状态改变
@@ -170,13 +176,19 @@ MainWindow::MainWindow(QWidget *parent)
 
     // post init
     if (m_isDeepin) {
+        menuBar->setVisible(false);
         setAttribute(Qt::WA_TranslucentBackground, true);
         m_centralWidgetBlurBg->setVisible(true);
-        titlebar()->setBackgroundTransparent(true);
+        titleBar->setBackgroundTransparent(true);
+        setWindowFlag(Qt::WindowType::FramelessWindowHint, true);
     } else {
         setAttribute(Qt::WA_TranslucentBackground, false);
         m_centralWidgetBlurBg->setVisible(false);
-        titlebar()->setBackgroundTransparent(false);
+        titleBar->setBackgroundTransparent(false);
+        titleBar->setVisible(false);
+
+        mainLayout->removeWidget(titleBar);
+        titleBar->deleteLater();
     }
 
     updateUIByRunningStatus();
@@ -188,13 +200,13 @@ MainWindow::~MainWindow()
 
 void MainWindow::resizeEvent(QResizeEvent *event)
 {
-    DMainWindow::resizeEvent(event);
+    QMainWindow::resizeEvent(event);
     m_centralWidgetBlurBg->setFixedSize(size());
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    DMainWindow::closeEvent(event);
+    QMainWindow::closeEvent(event);
     qApp->exit();
 }
 
@@ -243,6 +255,6 @@ void MainWindow::openSparkStoreNeedBeInstallDlg()
 void MainWindow::updateUIByRunningStatus()
 {
     bool enable = (RunningStatus::Normal == m_appManagerModel->getRunningStatus());
-    titlebar()->menu()->setEnabled(enable);
+    m_mainMenu->setEnabled(enable);
     m_appManagerWidget->setEnabled(enable);
 }

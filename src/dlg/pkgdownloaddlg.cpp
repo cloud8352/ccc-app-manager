@@ -51,7 +51,7 @@ PkgDownloadDlg::PkgDownloadDlg(const AM::AppInfo &appInfo, AppManagerModel *mode
     setLayout(mainLayout);
 
     m_titlebar = new DTitlebar(this);
-    m_titlebar->setIcon(QIcon::fromTheme("ccc-app-manager"));
+    m_titlebar->setIcon(QIcon(":/icons/ccc-app-manager_56px.svg"));
     m_titlebar->setTitle("应用管理器");
     m_titlebar->setFixedHeight(40);
     m_titlebar->setBackgroundTransparent(true);
