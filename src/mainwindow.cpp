@@ -32,6 +32,8 @@ MainWindow::MainWindow(QWidget *parent)
     // setTitlebarShadowEnabled(false);
     setFocusPolicy(Qt::FocusPolicy::ClickFocus);
 
+    m_appManagerModel = new AppManagerModel(this);
+
     QMenuBar *menuBar = this->menuBar();
     m_mainMenu = new QMenu(this);
     m_mainMenu->setTitle("打开");
@@ -56,7 +58,10 @@ MainWindow::MainWindow(QWidget *parent)
     m_centralWidgetBlurBg->lower();
 
     // 判断系统是否是deepin
-    m_isDeepin =  DSysInfo::isDeepin();
+    m_isDeepin = DSysInfo::isDeepin();
+    if (m_appManagerModel->IsInGxdeOs()) {
+        m_isDeepin = true;
+    }
 
     DFrame *centralWidget = new DFrame(this);
     QPalette pa = centralWidget->palette();
@@ -82,7 +87,6 @@ MainWindow::MainWindow(QWidget *parent)
     mainLayout->addLayout(contentLayout, 1);
 
     // 应用管理
-    m_appManagerModel = new AppManagerModel(this);
     m_appManagerWidget = new AppManagerWidget(m_appManagerModel, this);
     contentLayout->addWidget(m_appManagerWidget);
 

@@ -31,6 +31,9 @@
 // 包名格式化字符串
 #define PKG_NAME_FORMAT_STR "%1_%2_%3.deb"
 
+// GXDE OS 识别号
+const QString GxdeOsId = "GXDE";
+
 namespace AM {
 // 运行状态
 enum RunningStatus {

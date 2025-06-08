@@ -8,6 +8,8 @@
 #include <QObject>
 #include <QMap>
 #include <QDBusInterface>
+#include <QSettings>
+#include <QTextCodec>
 
 DCORE_USE_NAMESPACE
 
@@ -22,6 +24,8 @@ class AppManagerModel : public QObject
 public:
     explicit AppManagerModel(QObject *parent = nullptr);
     virtual ~AppManagerModel() override;
+
+    bool IsInGxdeOs();
 
     RunningStatus getRunningStatus();
 
@@ -86,8 +90,10 @@ private:
     void initData();
     void initConnection();
     void postInit();
+    void readOsInfo();
 
 private:
     AppManagerJob *m_appManagerJob;
     QThread *m_appManagerJobThread;
+    QString m_osId;
 };

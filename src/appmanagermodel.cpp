@@ -29,6 +29,11 @@ AppManagerModel::~AppManagerModel()
     m_appManagerJob = nullptr;
 }
 
+bool AppManagerModel::IsInGxdeOs()
+{
+    return m_osId == GxdeOsId;
+}
+
 RunningStatus AppManagerModel::getRunningStatus()
 {
     return m_appManagerJob->getRunningStatus();
@@ -279,6 +284,8 @@ void AppManagerModel::initData()
     m_appManagerJobThread = new QThread;
     m_appManagerJob = new AppManagerJob;
     m_appManagerJob->moveToThread(m_appManagerJobThread);
+
+    readOsInfo();
 }
 
 void AppManagerModel::initConnection()
@@ -332,4 +339,12 @@ void AppManagerModel::postInit()
 {
     // 启动线程
     m_appManagerJobThread->start();
+}
+
+void AppManagerModel::readOsInfo()
+{
+    QSettings readIniSettingMethod("/etc/os-release", QSettings::Format::IniFormat);
+    QTextCodec *textCodec = QTextCodec::codecForName("UTF-8");
+    readIniSettingMethod.setIniCodec(textCodec);
+    m_osId = readIniSettingMethod.value("ID").toString();
 }
