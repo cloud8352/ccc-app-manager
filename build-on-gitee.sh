@@ -1,8 +1,16 @@
 # 换源
 pwd
 echo "换源"
-sed -i 's/deb.debian.org/mirrors.ustc.edu.cn/g' /etc/apt/sources.list
-sed -i 's/deb http:\/\/security.debian.org/#deb http:\/\/security.debian.org/g' /etc/apt/sources.list
+cat > /etc/apt/sources.list << EOF
+# 默认注释了源码镜像以提高 apt update 速度，如有需要可自行取消注释
+deb http://mirrors.tuna.tsinghua.edu.cn/debian/ buster main contrib non-free
+# deb-src http://mirrors.tuna.tsinghua.edu.cn/debian/ buster main contrib non-free
+deb http://mirrors.tuna.tsinghua.edu.cn/debian/ buster-updates main contrib non-free
+# deb-src http://mirrors.tuna.tsinghua.edu.cn/debian/ buster-updates main contrib non-free
+deb http://mirrors.tuna.tsinghua.edu.cn/debian-security buster/updates main contrib non-free
+# deb-src http://mirrors.tuna.tsinghua.edu.cn/debian-security buster/updates main contrib non-free
+EOF
+cat /etc/apt/sources.list
 
 apt-get update
 export DEBIAN_FRONTEND=noninteractive
