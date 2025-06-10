@@ -1,3 +1,9 @@
+com.github.ccc-app-manager (0.0.11-1) unstable; urgency=medium
+
+  * 更新全新图标
+
+ -- keke <ct243768648@qq.com>  Tue, 9 Sep 2022 10:42:29 +0800
+
 com.github.ccc-app-manager (0.0.11) unstable; urgency=medium
 
   * Now Spark AppManager
