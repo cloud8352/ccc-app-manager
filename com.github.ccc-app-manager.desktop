@@ -1,11 +1,10 @@
-#!/usr/bin/env xdg-open
 [Desktop Entry]
 Name=app-manager
 Name[zh_CN]=应用管理器
 Categories=Utility;
 Comment=app manager,app,system
 Encoding=UTF-8
-Exec=/opt/apps/com.github.ccc-app-manager/files//ccc-app-manager
+Exec=/opt/apps/com.github.ccc-app-manager/files/start.sh "%F"
 Icon=/opt/apps/com.github.ccc-app-manager/files/ccc-app-manager_56px.svg
 StartupNotify=true
 Terminal=false

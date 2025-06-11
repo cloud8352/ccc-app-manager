@@ -10,7 +10,7 @@ DWIDGET_END_NAMESPACE
 DWIDGET_USE_NAMESPACE
 DCORE_USE_NAMESPACE
 
-class MainWindow : public QMainWindow
+class MainWindow : public DMainWindow
 {
     Q_OBJECT
 public:
@@ -30,7 +30,6 @@ private:
     void updateUIByRunningStatus();
 
 private:
-    QMenu *m_mainMenu;
     DBlurEffectWidget *m_barBlurBg;
     DBlurEffectWidget *m_centralWidgetBlurBg;
     bool m_isDeepin;

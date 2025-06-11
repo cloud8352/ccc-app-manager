@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/">
+    <qresource prefix="/icons/deepin/builtin">
         <file>icons/ccc-app-manager_56px.svg</file>
         <file>icons/app-manager_bak_64px.svg</file>
         <file>icons/distributor-logo-deepin_64px.svg</file>

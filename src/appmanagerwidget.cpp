@@ -107,7 +107,7 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
     QPushButton *reloadBtn = new QPushButton(this);
     reloadBtn->setFlat(true);
     reloadBtn->setToolTip("重载所有应用信息");
-    reloadBtn->setIcon(QIcon(":/actions/rotate_48px.svg"));
+    reloadBtn->setIcon(QIcon::fromTheme("rotate"));
     reloadBtn->setIconSize(QSize(30, 30));
     reloadBtn->setFixedSize(QSize(30, 30));
     guideOperatingLayout->addWidget(reloadBtn);
@@ -119,7 +119,7 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
 
     QPushButton *filterBtn = new QPushButton(this);
     filterBtn->setToolTip("展示类别");
-    filterBtn->setIcon(QIcon(":/actions/filter_48px.svg"));
+    filterBtn->setIcon(QIcon::fromTheme("filter"));
     filterBtn->setFixedWidth(30);
     guideOperatingLayout->addWidget(filterBtn);
 
@@ -142,7 +142,7 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
 
     QPushButton *sorterBtn = new QPushButton(this);
     sorterBtn->setToolTip("排序");
-    sorterBtn->setIcon(QIcon(":/actions/sorter_48px.svg"));
+    sorterBtn->setIcon(QIcon::fromTheme("sorter"));
     sorterBtn->setFixedWidth(30);
     guideOperatingLayout->addWidget(sorterBtn);
 
@@ -270,7 +270,7 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
     // 查找下一个按钮
     DIconButton *findNextContentBtn = new DIconButton(this);
     findNextContentBtn->setToolTip("查找下一个");
-    findNextContentBtn->setIcon(QIcon(":/actions/chevron-down_48px.svg"));
+    findNextContentBtn->setIcon(QIcon::fromTheme("chevron-down"));
     findNextContentBtn->setFixedSize(30, 30);
     findNextContentBtn->setIconSize(QSize(30, 30));
     findNextContentBtn->setEnabledCircle(true);
@@ -315,10 +315,10 @@ AppManagerWidget::AppManagerWidget(AppManagerModel *model, QWidget *parent)
     firstLineBottomLayout->addSpacing(10);
     // 跳转到应用商店菜单
     QAction *gotoDeepinAppStoreAction = new QAction("深度", this);
-    gotoDeepinAppStoreAction->setIcon(QIcon(":/icons/distributor-logo-deepin_64px.svg"));
+    gotoDeepinAppStoreAction->setIcon(QIcon::fromTheme("distributor-logo-deepin"));
     gotoDeepinAppStoreAction->setCheckable(false);
     QAction *gotoSparkAppStoreAction = new QAction("星火", this);
-    gotoSparkAppStoreAction->setIcon(QIcon(":/icons/spark-store_64px.svg"));
+    gotoSparkAppStoreAction->setIcon(QIcon::fromTheme("spark-store"));
     gotoSparkAppStoreAction->setCheckable(false);
     QMenu *gotoAppStoreBtnMenu = new QMenu(this);
     gotoAppStoreBtnMenu->addAction(gotoDeepinAppStoreAction);
