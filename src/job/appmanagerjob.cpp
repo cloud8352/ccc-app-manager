@@ -301,6 +301,7 @@ void AppManagerJob::init()
 
 void AppManagerJob::reloadAppInfos()
 {
+    setRunningStatus(AM::Busy);
     m_mutex.lock(); // m_appInfosMap为成员变量，加锁
     m_appInfosMap.clear();
     m_mutex.unlock(); // 解锁
@@ -328,6 +329,8 @@ void AppManagerJob::reloadAppInfos()
     loadAllPkgInstalledAppInfos();
 
     Q_EMIT loadAppInfosFinished();
+
+    setRunningStatus(AM::Normal);
 }
 
 void AppManagerJob::downloadPkg(const QString &pkgName)
